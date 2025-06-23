@@ -1108,20 +1108,20 @@ class BBL_Controller:
                       linear_rate=1.5):
         THRESHOLD = 2047
         speed = abs(set_speed)
-        # 死区内输出为0
+        # The output is 0 in the dead zone.
         if (speed) < dead_zone:
             return 0
         if speed > THRESHOLD:
             speed = THRESHOLD
 
-        # 计算低速阶段的阈值
+        # Calculate the threshold value for the slow phase
         low_speed_threshold = dead_zone + (
             2048 - 2 * dead_zone) * low_speed_percentage
 
         tracker_speed = self._low_speed_map(
             min(speed, low_speed_threshold - 1), dead_zone,
             low_speed_threshold, linear_rate)
-        if speed >= low_speed_threshold:  # 中高速段
+        if speed >= low_speed_threshold:  # Medium and high speed section
             tracker_speed = tracker_speed + (speed -
                                              low_speed_threshold) * linear_rate
 
