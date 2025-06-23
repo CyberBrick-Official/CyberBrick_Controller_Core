@@ -583,7 +583,7 @@ class BBL_Controller:
                 self.motors.set_reverse_rate(i+1, min_val)
                 self.motors.set_offset(i+1, offset)
         except (Exception) as e:
-            logger.warn(f"[CTRL]UPDATA MOTORS PARAM: {e}")
+            logger.warn(f"[CTRL]UPDATE_MOTORS_PARAM: {e}")
 
         for i in range(6):
             self.adc_mid_list[i] = self.setting.get("sender", {}).get(
