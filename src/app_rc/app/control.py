@@ -536,7 +536,7 @@ class BBL_Controller:
         self.adv_last_rc_data = [0] * 6
         self.adv_cur_rc_data = [2048] * 6
         self.cycle_time = 0.02
-        self.updata_tar_speed_threadhold = 200
+        self.update_tar_speed_threshold = 200
 
         self.en_simulation_time = 0
         self.motors_simulation_speed = [0] * 2
@@ -583,7 +583,7 @@ class BBL_Controller:
                 self.motors.set_reverse_rate(i+1, min_val)
                 self.motors.set_offset(i+1, offset)
         except (Exception) as e:
-            logger.warn(f"[CTRL]UPDATA MOTORS PARAM: {e}")
+            logger.warn(f"[CTRL]UPDATE_MOTORS_PARAM: {e}")
 
         for i in range(6):
             self.adc_mid_list[i] = self.setting.get("sender", {}).get(
@@ -1085,7 +1085,7 @@ class BBL_Controller:
         if en is True:
             if abs(
                     last_tar_speed - target_speed
-            ) > self.updata_tar_speed_threadhold or elapsed_time > \
+            ) > self.update_tar_speed_threshold or elapsed_time > \
                     self.high_speed_duration[motor_idx]:
                 elapsed_time = 0
             if (abs(target_speed) > 2048 * (
@@ -1108,20 +1108,20 @@ class BBL_Controller:
                       linear_rate=1.5):
         THRESHOLD = 2047
         speed = abs(set_speed)
-        # 死区内输出为0
+        # The output is 0 in the dead zone
         if (speed) < dead_zone:
             return 0
         if speed > THRESHOLD:
             speed = THRESHOLD
 
-        # 计算低速阶段的阈值
+        # Calculate the threshold value for the slow phase
         low_speed_threshold = dead_zone + (
             2048 - 2 * dead_zone) * low_speed_percentage
 
         tracker_speed = self._low_speed_map(
             min(speed, low_speed_threshold - 1), dead_zone,
             low_speed_threshold, linear_rate)
-        if speed >= low_speed_threshold:  # 中高速段
+        if speed >= low_speed_threshold:  # Medium and high speed section
             tracker_speed = tracker_speed + (speed -
                                              low_speed_threshold) * linear_rate
 
