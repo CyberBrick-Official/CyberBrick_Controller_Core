@@ -1030,13 +1030,13 @@ class BBL_Controller:
                         cycle_time=0.02):
 
         def limit_value(value):
-            HIGHT_ZONE_MIN_SPEED = 800
-            if value < -HIGHT_ZONE_MIN_SPEED or value > HIGHT_ZONE_MIN_SPEED:
+            HIGH_ZONE_MIN_SPEED = 800
+            if value < -HIGH_ZONE_MIN_SPEED or value > HIGH_ZONE_MIN_SPEED:
                 return value
             elif value < 0:
-                return -HIGHT_ZONE_MIN_SPEED
+                return -HIGH_ZONE_MIN_SPEED
             else:
-                return HIGHT_ZONE_MIN_SPEED
+                return HIGH_ZONE_MIN_SPEED
 
         remaining_time = total_time - elapsed_time  # Calculate remaining time
 
