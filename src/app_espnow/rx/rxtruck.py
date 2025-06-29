@@ -11,7 +11,9 @@
 # * Motor1: channel 2 (left vertical stick)
 # * Motor2: not driven by this code
 # * NeoPixel_Channel1: not driven by this code
-# * NeoPixel_Channel2: not driven by this code
+# * NeoPixel_Channel2: driven in code by throttle (LV) and 3-way switch position
+
+# In CyberBrick official truck, the 4 NeoPixels are alls connected to channel2, 1 - FrontLeft, 2 - FrontRight, 3 - BackLeft, 4 - BackRight
 
 """
 The incoming telegram via ESP-NOW is expected in the following order:
@@ -32,6 +34,7 @@ import aioespnow
 import asyncio
 from machine import Pin, PWM
 from neopixel import NeoPixel
+import utime
 
 # Initialize Wi-Fi in station mode
 sta = network.WLAN(network.STA_IF)
@@ -70,13 +73,27 @@ async def receive_messages(e):
     M1A = PWM(Pin(4), freq=100, duty_u16=0)
     M1B = PWM(Pin(5), freq=100, duty_u16=0)
 
+    #Initialize NeoPixel LED string 2 with 4 pixels
+    LEDstring2pin = Pin(20, Pin.OUT)
+    LEDstring2 = NeoPixel(LEDstring2pin, 4)
+    for i in range(4):
+      LEDstring2[i] = (0, 0, 0) # default all off
+    LEDstring2.write()
+
+    blinkerthrright = 1365 # 1/3 of 4095 
+    blinkerthrleft  = 2730 # 2/3 of 4095
+    blinkertime_ms  = 500  # 2 Hz
+
     while True:
         try:
             async for mac, msg in e:
                 rxch = msg.decode().split(",")
                 if len(rxch) == 10:
+                  blinker = int(rxch[0]) # 3-way switch
+                  
                   # 1 to 2ms range for 0 to 4095 input value
-                  S1.duty_u16(int(((float(rxch[4])*3277)/4095 + 3277)))
+                  steering = int(rxch[4])
+                  S1.duty_u16(int(((float(steering)*3277)/4095 + 3277)))
                   # 0.5 to 2.5ms range for 0 to 4095 input value
                   S2.duty_u16(int(((float(rxch[3])*6554)/4095 + 1638)))
                   S3.duty_u16(int(((float(rxch[2])*6554)/4095 + 1638)))
@@ -87,18 +104,109 @@ async def receive_messages(e):
                   midpoint = 2047
                   deadzoneplusminus = 100
                   if ((throttle < (midpoint+deadzoneplusminus)) and (throttle > (midpoint-deadzoneplusminus))):
-                    #deadzone
+                    #deadzone - no forward/backward movement
                     M1A.duty_u16(0)
                     M1B.duty_u16(0)
+
+                    # Check for blinker
+                    if ((blinker < blinkerthrright) or (blinker > blinkerthrleft)):
+                      if (blinker < blinkerthrright):
+                        # Right blinker actuated
+                        LEDstring2[0] = (32, 32, 32) # Front left parking lights
+                        LEDstring2[2] = (255, 0, 0)  # Back left brake on
+                        if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                          LEDstring2[1] = (0, 0, 0)    # Front right blinker dark cycle
+                          LEDstring2[3] = (255, 0, 0)  # Back right brake on
+                        else:
+                          LEDstring2[1] = (255, 255, 0) # Front right blinker light cycle
+                          LEDstring2[3] = (255, 255, 0) # Back  right blinker light cycle
+                      else:
+                        # Left blinker actuated
+                        LEDstring2[1] = (32, 32, 32) # Front parking lights
+                        LEDstring2[3] = (255, 0, 0)  # Back right brake on
+                        if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                          LEDstring2[0] = (0, 0, 0)    # Front left blinker dark cycle
+                          LEDstring2[2] = (255, 0, 0)  # Back left brake on
+                        else:
+                          LEDstring2[0] = (255, 255, 0) # Front left blinker light cycle
+                          LEDstring2[2] = (255, 255, 0) # Back  left blinker light cycle
+                    else:
+                      # No blinker actuated
+                      LEDstring2[0] = (32, 32, 32) # Front parking lights
+                      LEDstring2[1] = (32, 32, 32) # Front parking lights
+                      LEDstring2[2] = (255, 0, 0) # Brake on
+                      LEDstring2[3] = (255, 0, 0) # Brake on
+                    LEDstring2.write()
+                    
                   else:
                     if throttle > midpoint:
                       # backwards
                       M1A.duty_u16(min(32*(throttle-midpoint), 65535))
                       M1B.duty_u16(0)
+
+                      # Check for blinker
+                      if ((blinker < blinkerthrright) or (blinker > blinkerthrleft)):
+                        if (blinker < blinkerthrright):
+                          # Right blinker actuated
+                          LEDstring2[0] = (32, 32, 32) # Front parking lights
+                          LEDstring2[2] = (255, 255, 255) # Reverse on
+                          if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                            LEDstring2[1] = (0, 0, 0) # Front right blinker dark cycle
+                            LEDstring2[3] = (255, 255, 255) # Reverse on
+                          else:
+                            LEDstring2[1] = (255, 255, 0) # Front right blinker light cycle
+                            LEDstring2[3] = (255, 255, 0) # Back  right blinker light cycle
+                        else:
+                          # Left blinker actuated
+                          LEDstring2[1] = (32, 32, 32) # Front parking lights
+                          LEDstring2[3] = (255, 255, 255) # Reverse on
+                          if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                            LEDstring2[0] = (0, 0, 0) # Front left blinker dark cycle
+                            LEDstring2[2] = (255, 255, 255) # Reverse on
+                          else:
+                            LEDstring2[0] = (255, 255, 0) # Front left blinker light cycle
+                            LEDstring2[2] = (255, 255, 0) # Back  left blinker light cycle
+                      else:
+                        # No blinker actuated
+                        LEDstring2[0] = (32, 32, 32) # Front parking lights
+                        LEDstring2[1] = (32, 32, 32) # Front parking lights
+                        LEDstring2[2] = (255, 255, 255) # Reverse on
+                        LEDstring2[3] = (255, 255, 255) # Reverse on
+                      LEDstring2.write()
                     else:
                       # forwards
                       M1A.duty_u16(0)
                       M1B.duty_u16(min(32*(midpoint-throttle), 65535))
+
+                      # Check for blinker
+                      if ((blinker < blinkerthrright) or (blinker > blinkerthrleft)):
+                        if (blinker < blinkerthrright):
+                          # Right blinker actuated
+                          LEDstring2[0] = (255, 255, 255) # Front driving light
+                          LEDstring2[2] = (32, 0, 0) # Dim red backlight
+                          if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                            LEDstring2[1] = (0, 0, 0) # Front right blinker dark cycle
+                            LEDstring2[3] = (32, 0, 0) # Dim red backlight
+                          else:
+                            LEDstring2[1] = (255, 255, 0) # Front right blinker light cycle
+                            LEDstring2[3] = (255, 255, 0) # Back  right blinker light cycle
+                        else:
+                          # Left blinker actuated
+                          LEDstring2[1] = (255, 255, 255) # Front driving light
+                          LEDstring2[3] = (32, 0, 0) # Dim red backlight
+                          if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+                            LEDstring2[0] = (0, 0, 0) # Front left blinker dark cycle
+                            LEDstring2[2] = (32, 0, 0) # Dim red backlight
+                          else:
+                            LEDstring2[0] = (255, 255, 0) # Front left blinker light cycle
+                            LEDstring2[2] = (255, 255, 0) # Back  left blinker light cycle
+                      else:
+                        # No blinker actuated
+                        LEDstring2[0] = (255, 255, 255) # Front driving light
+                        LEDstring2[1] = (255, 255, 255) # Front driving light
+                        LEDstring2[2] = (32, 0, 0) # Dim red backlight
+                        LEDstring2[3] = (32, 0, 0) # Dim red backlight
+                      LEDstring2.write()
                   
         except OSError as err:
             print("Error:", err)
