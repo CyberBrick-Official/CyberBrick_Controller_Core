@@ -78,9 +78,9 @@ async def receive_messages(e):
                   # 1 to 2ms range for 0 to 4095 input value
                   S1.duty_u16(int(((float(rxch[4])*3277)/4095 + 3277)))
                   # 0.5 to 2.5ms range for 0 to 4095 input value
-                  #S2.duty_u16(int(((float(rxch[3])*6554)/4095 + 1638)))
-                  #S3.duty_u16(int(((float(rxch[2])*6554)/4095 + 1638)))
-                  #S4.duty_u16(int(((float(rxch[1])*6554)/4095 + 1638)))
+                  S2.duty_u16(int(((float(rxch[3])*6554)/4095 + 1638)))
+                  S3.duty_u16(int(((float(rxch[2])*6554)/4095 + 1638)))
+                  S4.duty_u16(int(((float(rxch[1])*6554)/4095 + 1638)))
 
                   throttle = int(rxch[2])
                   #deadzone check
