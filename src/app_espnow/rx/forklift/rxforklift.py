@@ -7,7 +7,7 @@
 # * Servo1: channel 3 (slider)
 # * Motor1: right track (mix of channel 2 (left vertical stick) and channel 4 (right horizontal stick))
 # * Motor2: left track  (mix of channel 2 (left vertical stick) and channel 4 (right horizontal stick))
-# * NeoPixel_Channel2: driven in code by 3-way switch position
+# * NeoPixel_Channel2: driven in code by 3-way switch position and button press
 
 # In CyberBrick official forklift, the 2 NeoPixels are alls connected to channel2, 1 - Right, 2 - Left
 
