@@ -1,11 +1,12 @@
 # CyberBrick ESP-NOW transmitter in CyberBrick MicroPython flavor
 # To be used on CyberBrick Core, paired with X12 remote control transmitter shield
+# The code in this file supports up to 3 models, model selection done via 3-way switch, connected at L1 input of X12 shield
 
 from machine import Pin, ADC
 import network
-import aioespnow
-import asyncio
+import espnow
 from neopixel import NeoPixel
+import time
 
 """
 The outgoing telegram via ESP-NOW is the following:
@@ -36,60 +37,133 @@ k4 = Pin(20, Pin.IN) # Not used
 # Initialize Wi-Fi in station mode
 sta = network.WLAN(network.STA_IF)
 sta.active(True)
-sta.config(channel=1)  # Set channel explicitly if packets are not delivered
-sta.disconnect()
+mac = sta.config('mac')
+mac_address = ':'.join('%02x' % b for b in mac)
+print("MAC address of the transmitter:", mac_address)
 
-# Initialize AIOESPNow
-e = aioespnow.AIOESPNow()
-try:
-    e.active(True)
-except OSError as err:
-    print("Failed to initialize AIOESPNow:", err)
-    raise
+def wifi_reset():
+  # Reset Wi-Fi to AP_IF off, STA_IF on and disconnected
+  sta = network.WLAN(network.WLAN.IF_STA); sta.active(False)
+  ap = network.WLAN(network.WLAN.IF_AP); ap.active(False)
+  sta.active(True)
+  while not sta.active():
+      time.sleep(0.1)
+  while sta.isconnected():
+      time.sleep(0.1)
+  sta = network.WLAN(network.STA_IF)
+  sta.active(True)
+  sta.config(channel=13,pm=sta.PM_NONE,reconnects=0)
+  sta.disconnect()
+
+wifi_reset()
+
+# Initialize ESP-NOW
+e = espnow.ESPNow()
+
+def enow_reset():
+  try:
+      e.active(True)
+  except OSError as err:
+      print("Failed to initialize ESP-NOW:", err)
+      raise
+
+enow_reset()
     
-# Receiver's MAC address (Replace with your receiver MAC aa:bb:cc:dd:ee:ff!)
-receiver_mac = b'\xaa\xbb\xcc\xdd\xee\xff'
+# Model receiver's MAC addresses (Replace with your receiver MAC aa:bb:cc:dd:ee:ff!)
+# If you plan to control only 1 model, enter the same address to all 3 lines.
+# If you plan to control 2 models, you can enter 2 lines with the same model receiver MAC and continue using the 3-way switch as a binary channel.
+# With a single model and all 3 addresses below filled with the same MAC, you can have full 3-position switch functionality on the model side for first channel.
+# In case you wish to control the examples truck and forklift in this ESP-NOW demo,
+# use receiver1_mac for Truck and both, receiver2_mac and receiver3_mac for forklift.
+receiver1_mac = b'\xaa\xbb\xcc\xdd\xee\xff'
+receiver2_mac = b'\xaa\xbb\xcc\xdd\xee\xff'
+receiver3_mac = b'\xaa\xbb\xcc\xdd\xee\xff'
 
-# Add peer
-try:
-    e.add_peer(receiver_mac)
-except OSError as err:
-    print("Failed to add peer:", err)
-    raise
+# Drive NeoPixel on CyberBrick Core
+npcore = Pin(8, Pin.OUT)
+np = NeoPixel(npcore, 1)
+val = 16
 
-# Async function to send messages
-async def send_messages(e, peer):
-    # Drive NeoPixel on CyberBrick Core
-    npcore = Pin(8, Pin.OUT)
-    np = NeoPixel(npcore, 1)
-    val = 16
-    while True:
-        try:
-            message = f"{l1.read()},{l2.read()},{l3.read()},{r1.read()},{r2.read()},{r3.read()},{k1.value()},{k2.value()},{k3.value()},{k4.value()}"
-            await e.asend(peer, message)  
-            # "Breathing" LED effect in violet tone
-            if (val > 255):
-              np[0] = ((int)((511-val)/2), 0, (511-val))
-            else:
-              np[0] = ((int)(val/2), 0, val)
-            np.write()
-            val = val + 8 # NeoPixel intensity change step size
-            if val > (511-16):
-              val = 16
-            await asyncio.sleep(0.02)  # Send every 20 milliseconds / @50 Hz
+while True:
+  try:
+    l1_value = l1.read()
+    message = f"{l1_value},{l2.read()},{l3.read()},{r1.read()},{r2.read()},{r3.read()},{k1.value()},{k2.value()},{k3.value()},{k4.value()}"
+    if l1_value < 1365: # 1/3 of 4095 
+      # right switch position - model 1
+      try:
+        e.get_peer(receiver1_mac)
+      except OSError as err:
+        if err.errno == -12393: # ESP_ERR_ESPNOW_NOT_FOUND
+          peer_num, encrypt_num = e.peer_count()
+          if peer_num > 0:
+            peers = e.get_peers()
+            e.del_peer(peers[0][0])
+          try:
+            e.add_peer(receiver1_mac)
+          except OSError as err:
+            print("Failed to add peer:", err)
+      if not e.send(receiver1_mac, message, True):
+        e.active(False)
+        wifi_reset()
+        enow_reset()
         
-        except OSError as err:
-            print("Error:", err)
-            await asyncio.sleep(0.5)
+    elif l1_value < 2730: # 2/3 of 4095
+      # middle position - model 2
+      try:
+        e.get_peer(receiver2_mac)
+      except OSError as err:
+        if err.errno == -12393: # ESP_ERR_ESPNOW_NOT_FOUND
+          peer_num, encrypt_num = e.peer_count()
+          if peer_num > 0:
+            peers = e.get_peers()
+            e.del_peer(peers[0][0])
+          try:
+            e.add_peer(receiver2_mac)
+          except OSError as err:
+            print("Failed to add peer:", err)
+      if not e.send(receiver2_mac, message, True):
+        e.active(False)
+        wifi_reset()
+        enow_reset()
+        
+    else:
+      # left position - model 3
+      try:
+        e.get_peer(receiver3_mac)
+      except OSError as err:
+        if err.errno == -12393: # ESP_ERR_ESPNOW_NOT_FOUND
+          peer_num, encrypt_num = e.peer_count()
+          if peer_num > 0:
+            peers = e.get_peers()
+            e.del_peer(peers[0][0])
+          try:
+            e.add_peer(receiver3_mac)
+          except OSError as err:
+            print("Failed to add peer:", err)
+      if not e.send(receiver3_mac, message, True):
+        e.active(False)
+        wifi_reset()
+        enow_reset()
+            
+    # "Breathing" LED effect in violet tone
+    if (val > 255):
+      np[0] = ((int)((511-val)/2), 0, (511-val))
+    else:
+      np[0] = ((int)(val/2), 0, val)
+    np.write()
+    val = val + 8 # NeoPixel intensity change step size
+    if val > (511-16):
+      val = 16
 
-# Main async function
-async def main(e, peer):
-    await send_messages(e, peer)
+    time.sleep(0.02) # Send every 20 milliseconds / @50 Hz
 
-# Run the async program
-try:
-    asyncio.run(main(e, receiver_mac))
-except KeyboardInterrupt:
+  except OSError as err:
+    print("Error:", err)
+    time.sleep(0.5)
+    e.active(False)
+    wifi_reset()
+    enow_reset()
+        
+  except KeyboardInterrupt:
     print("Stopping sender...")
     e.active(False)
-    sta.active(False)

@@ -5,12 +5,8 @@
 #
 # The outputs of X11 shield are driven from following inputs:
 # * Servo1: channel 3 (slider)
-# * Servo2: channel 5 (right vertical stick)
-# * Servo3: channel 1 not driven by this code
-# * Servo4: channel 3 not driven by this code
 # * Motor1: right track (mix of channel 2 (left vertical stick) and channel 4 (right horizontal stick))
 # * Motor2: left track  (mix of channel 2 (left vertical stick) and channel 4 (right horizontal stick))
-# * NeoPixel_Channel1: not driven by this code
 # * NeoPixel_Channel2: driven in code by 3-way switch position
 
 # In CyberBrick official forklift, the 2 NeoPixels are alls connected to channel2, 1 - Right, 2 - Left
@@ -29,12 +25,23 @@ The incoming telegram via ESP-NOW is expected in the following order:
 10) ch10 K4, 1-bit value, low-active (Not used)
 """
 
-import network
-import aioespnow
-import asyncio
 from machine import Pin, PWM
+import network
+import espnow
 from neopixel import NeoPixel
 import utime
+
+# Initialize servo outputs with 1.5ms pulse length in 20ms period
+S1 = PWM(Pin(3), freq=50, duty_u16=4915) # servo center 1.5ms equals to 65535/20 * 1.5 = 4915
+#S2 = PWM(Pin(2), freq=50, duty_u16=4915)
+#S3 = PWM(Pin(1), freq=50, duty_u16=4915)
+#S4 = PWM(Pin(0), freq=50, duty_u16=4915)
+
+# Initialize motor 1 and 2 outputs to idle (a brushed motor is controlled via 2 pins on HTD8811)
+M1A = PWM(Pin(4), freq=100, duty_u16=0)
+M1B = PWM(Pin(5), freq=100, duty_u16=0)
+M2A = PWM(Pin(6), freq=100, duty_u16=0)
+M2B = PWM(Pin(7), freq=100, duty_u16=0)
 
 # Initialize Wi-Fi in station mode
 sta = network.WLAN(network.STA_IF)
@@ -42,130 +49,171 @@ sta.active(True)
 mac = sta.config('mac')
 mac_address = ':'.join('%02x' % b for b in mac)
 print("MAC address of the receiver:", mac_address)
-sta.config(channel=1)  # Set channel explicitly if packets are not received
-sta.disconnect()
 
-# Initialize AIOESPNow
-e = aioespnow.AIOESPNow()
-try:
-    e.active(True)
-except OSError as err:
-    print("Failed to initialize AIOESPNow:", err)
-    raise
+def wifi_reset():
+  # Reset Wi-Fi to AP_IF off, STA_IF on and disconnected
+  sta = network.WLAN(network.WLAN.IF_STA); sta.active(False)
+  ap = network.WLAN(network.WLAN.IF_AP); ap.active(False)
+  sta.active(True)
+  while not sta.active():
+      time.sleep(0.1)
+  while sta.isconnected():
+      time.sleep(0.1)
+  sta = network.WLAN(network.STA_IF)
+  sta.active(True)
+  sta.config(channel=13,pm=sta.PM_NONE,reconnects=0)
+  sta.disconnect()
 
-print("Initialized AIOESPNow")
+wifi_reset()
 
-# Async function to receive messages
-async def receive_messages(e):
-    # Drive NeoPixel on CyberBrick Core
-    npcore = Pin(8, Pin.OUT)
-    np = NeoPixel(npcore, 1)
-    np[0] = (0, 10, 0) # dim green
-    np.write()
+# Initialize ESP-NOW
+e = espnow.ESPNow()
 
-    # Initialize all servo outputs with 1.5ms pulse length in 20ms period
-    S1 = PWM(Pin(3), freq=50, duty_u16=4915) # servo center 1.5ms equals to 65535/20 * 1.5 = 4915
-    S2 = PWM(Pin(2), freq=50, duty_u16=4915)
-    #S3 = PWM(Pin(1), freq=50, duty_u16=4915)
-    #S4 = PWM(Pin(0), freq=50, duty_u16=4915)
+def enow_reset():
+  try:
+      e.active(True)
+  except OSError as err:
+      print("Failed to initialize ESP-NOW:", err)
+      raise
 
-    # Initialize motor 1 and 2 outputs to idle (a brushed motor is controlled via 2 pins on HTD8811)
-    M1A = PWM(Pin(4), freq=100, duty_u16=0)
-    M1B = PWM(Pin(5), freq=100, duty_u16=0)
-    M2A = PWM(Pin(6), freq=100, duty_u16=0)
-    M2B = PWM(Pin(7), freq=100, duty_u16=0)
+enow_reset()
 
-    #Initialize NeoPixel LED string 2 with 2 pixels
-    LEDstring2pin = Pin(20, Pin.OUT)
-    LEDstring2 = NeoPixel(LEDstring2pin, 2)
-    for i in range(2):
-      LEDstring2[i] = (0, 0, 0) # default all off
-    LEDstring2.write()
+# Drive NeoPixel on CyberBrick Core
+npcore = Pin(8, Pin.OUT)
+np = NeoPixel(npcore, 1)
+np[0] = (0, 10, 0) # dim green
+np.write()
 
-    sliderthrright    = 1365 # 1/3 of 4095 
-    sliderthrleft     = 2730 # 2/3 of 4095
-    blinkertime_ms    = 500  # 2 Hz
-    midpoint          = 2047
-    deadzoneplusminus = 100
+#Initialize NeoPixel LED string 2 with 2 pixels
+LEDstring2pin = Pin(20, Pin.OUT)
+LEDstring2 = NeoPixel(LEDstring2pin, 2)
+for i in range(2):
+  LEDstring2[i] = (0, 0, 0) # default all off
+LEDstring2.write()
 
-    while True:
-        try:
-            async for mac, msg in e:
-                rxch = msg.decode().split(",")
-                if len(rxch) == 10:
-                  lightcontrol = int(rxch[0]) # 3-way switch
-                  if (lightcontrol > sliderthrleft):
-                     LEDstring2[0] = (255, 255, 255) # Right white
-                     LEDstring2[1] = (255, 255, 255) # Left white
-                  elif (lightcontrol < sliderthrright):
-                     #Yellow blinking lights
-                     if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
-                        LEDstring2[0] = (0, 0, 0) # Right dark
-                        LEDstring2[1] = (255, 255, 0) # Left yellow
-                     else:
-                        LEDstring2[0] = (255, 255, 0) # Right yellow
-                        LEDstring2[1] = (0, 0, 0) # Left dark
-                  else:
-                    LEDstring2[0] = (0, 0, 0) # Right dark
-                    LEDstring2[1] = (0, 0, 0) # Left dark
-                  LEDstring2.write()
+sliderthrright    = int(4095/3)
+sliderthrleft     = int(2*4095/3)
+blinkertime_ms    = 750  # 1.5 Hz
+servomidpoint     = int(1.5*65535/20) # 1.5 ms
+midpoint          = 2047
+deadzoneplusminus = 100
 
-                  # 0.5 to 2.5ms range for 0 to 4095 input value
-                  fork = int(rxch[3])
-                  S1.duty_u16(int(((float(fork)*6554)/4095 + 1638)))
-                  # 1 to 2ms range for 0 to 4095 input value
-                  S2.duty_u16(int(((float(rxch[5])*3277)/4095 + 3277)))
-                  # 0.5 to 2.5ms range for 0 to 4095 input value
-                  #S3.duty_u16(int(((float(rxch[2])*6554)/4095 + 1638)))
-                  #S4.duty_u16(int(((float(rxch[1])*6554)/4095 + 1638)))
+while True:
+  try:
+    # Receive message (host MAC, message, 500ms failsafe timeout)
+    host, msg = e.recv(500)
+    if msg == None:
+      # Failsafe
+      # Motors off
+      M1A.duty_u16(0)
+      M1B.duty_u16(0)
+      M2A.duty_u16(0)
+      M2B.duty_u16(0)
+      # Fork to idle
+      S1.duty_u16(servomidpoint)
+      # blinking red LEDs
+      if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+        LEDstring2[0] = (0, 0, 0) # Right dark
+        LEDstring2[1] = (0, 0, 0) # Left dark
+      else:
+        LEDstring2[0] = (255, 0, 0) # Right red
+        LEDstring2[1] = (255, 0, 0) # Left red
+      LEDstring2.write()
+
+      e.active(False)
+      wifi_reset()
+      enow_reset()
+    
+    else:
+      rxch = msg.decode().split(",")
+      if len(rxch) == 10:
+        # assuming that we received valid message
+        lightcontrol = int(rxch[0]) # 3-way switch
+        if (lightcontrol > sliderthrleft):
+          if int(rxch[6]) == 0: # Button pressed
+            #Yellow alternating blinking lights
+            if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+              LEDstring2[0] = (0, 0, 0) # Right dark
+              LEDstring2[1] = (255, 255, 0) # Left yellow
+            else:
+              LEDstring2[0] = (255, 255, 0) # Right yellow
+              LEDstring2[1] = (0, 0, 0) # Left dark
+          else:
+            LEDstring2[0] = (255, 255, 255) # Right white
+            LEDstring2[1] = (255, 255, 255) # Left white
+        elif (lightcontrol < sliderthrright):
+          #Yellow blinking lights
+          if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+            LEDstring2[0] = (0, 0, 0) # Right dark
+            LEDstring2[1] = (255, 255, 0) # Left yellow
+          else:
+            LEDstring2[0] = (255, 255, 0) # Right yellow
+            LEDstring2[1] = (0, 0, 0) # Left dark
+        else:
+          if int(rxch[6]) == 0: # Button pressed
+            #Yellow blinking lights
+            if ((utime.ticks_ms() % blinkertime_ms) > (blinkertime_ms / 2)):
+              LEDstring2[0] = (0, 0, 0) # Right dark
+              LEDstring2[1] = (0, 0, 0) # Left dark
+            else:
+              LEDstring2[0] = (255, 255, 0) # Right yellow
+              LEDstring2[1] = (255, 255, 0) # Left yellow
+          else:
+            LEDstring2[0] = (0, 0, 0) # Right dark
+            LEDstring2[1] = (0, 0, 0) # Left dark
+        LEDstring2.write()
+
+        # 0.5 to 2.5ms range for 0 to 4095 input value
+        fork = int(rxch[3])
+        S1.duty_u16(int(((float(fork)*6554)/4095 + 1638)))
+        #1 to 2ms range for 0 to 4095 input value
+        #S2.duty_u16(int(((float(rxch[5])*3277)/4095 + 3277)))
+        #0.5 to 2.5ms range for 0 to 4095 input value
+        #S3.duty_u16(int(((float(rxch[2])*6554)/4095 + 1638)))
+        #S4.duty_u16(int(((float(rxch[1])*6554)/4095 + 1638)))
+
+        steering = int(rxch[4])
+        throttle = int(rxch[2])
                   
-                  steering = int(rxch[4])
-                  throttle = int(rxch[2])
+        lefttrack = int(((steering-midpoint) + (throttle-midpoint))/2 + midpoint)
+        righttrack = int(((steering-midpoint) - (throttle-midpoint))/2 + midpoint)
                   
-                  lefttrack = int(((steering-midpoint) + (throttle-midpoint))/2 + midpoint)
-                  righttrack = int(((steering-midpoint) - (throttle-midpoint))/2 + midpoint)
+        if ((righttrack < (midpoint+deadzoneplusminus)) and (righttrack > (midpoint-deadzoneplusminus))):
+          #deadzone - no forward/backward movement
+          M1A.duty_u16(0)
+          M1B.duty_u16(0)
+        else:
+          if righttrack > midpoint:
+            # backwards
+            M1A.duty_u16(min(32*(righttrack-midpoint), 65535))
+            M1B.duty_u16(0)
+          else:
+            # forwards
+            M1A.duty_u16(0)
+            M1B.duty_u16(min(32*(midpoint-righttrack), 65535))
                   
-                  if ((righttrack < (midpoint+deadzoneplusminus)) and (righttrack > (midpoint-deadzoneplusminus))):
-                    #deadzone - no forward/backward movement
-                    M1A.duty_u16(0)
-                    M1B.duty_u16(0)
-                  else:
-                    if righttrack > midpoint:
-                      # backwards
-                      M1A.duty_u16(min(32*(righttrack-midpoint), 65535))
-                      M1B.duty_u16(0)
-                    else:
-                      # forwards
-                      M1A.duty_u16(0)
-                      M1B.duty_u16(min(32*(midpoint-righttrack), 65535))
-                  
-                  if ((lefttrack < (midpoint+deadzoneplusminus)) and (lefttrack > (midpoint-deadzoneplusminus))):
-                    #deadzone - no forward/backward movement
-                    M2A.duty_u16(0)
-                    M2B.duty_u16(0)
-                  else:
-                    if lefttrack > midpoint:
-                      # backwards
-                      M2A.duty_u16(min(32*(lefttrack-midpoint), 65535))
-                      M2B.duty_u16(0)
-                    else:
-                      # forwards
-                      M2A.duty_u16(0)
-                      M2B.duty_u16(min(32*(midpoint-lefttrack), 65535))
+        if ((lefttrack < (midpoint+deadzoneplusminus)) and (lefttrack > (midpoint-deadzoneplusminus))):
+          #deadzone - no forward/backward movement
+          M2A.duty_u16(0)
+          M2B.duty_u16(0)
+        else:
+          if lefttrack > midpoint:
+            # backwards
+            M2A.duty_u16(min(32*(lefttrack-midpoint), 65535))
+            M2B.duty_u16(0)
+          else:
+            # forwards
+            M2A.duty_u16(0)
+            M2B.duty_u16(min(32*(midpoint-lefttrack), 65535))
+  except OSError as err:
+    print("Error:", err)
+    time.sleep(0.5)
+    e.active(False)
+    wifi_reset()
+    enow_reset()
 
-        except OSError as err:
-            print("Error:", err)
-            await asyncio.sleep(0.5)
-            
-# Main async function
-async def main(e):
-    # Run receive and stats tasks concurrently
-    await asyncio.gather(receive_messages(e))
-
-# Run the async program
-try:
-    asyncio.run(main(e))
-except KeyboardInterrupt:
+  except KeyboardInterrupt:
     print("Stopping receiver...")
     e.active(False)
     sta.active(False)
+    break
