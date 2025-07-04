@@ -60,7 +60,7 @@ def wifi_reset():
       time.sleep(0.1)
   sta = network.WLAN(network.STA_IF)
   sta.active(True)
-  sta.config(channel=13,pm=sta.PM_NONE,reconnects=0)
+  sta.config(channel=1,pm=sta.PM_NONE,reconnects=0)
   sta.disconnect()
 
 wifi_reset()
