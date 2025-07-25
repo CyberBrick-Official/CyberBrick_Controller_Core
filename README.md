@@ -1,7 +1,7 @@
-# CyberBrick Controller Core
+# CyberBrick Multi-Function Core Board
 ----------------------------
 
-This is a project repository for RC controller applications and Timelapse controllers based on the [MicroPython](https://github.com/micropython/micropython) project, which works well on CyberBrick Controller Core with Receiver/Transmitter Shield or Timelapse Kit.
+This is a project repository for RC controller applications and Timelapse controllers based on the [MicroPython](https://github.com/micropython/micropython) project, which works well on CyberBrick Multi-Function Core Board with Receiver/Transmitter Shield or Timelapse Kit.
 
 This is fun, enjoy it!
 
@@ -27,7 +27,7 @@ Enter the RC code directory:
 
     $ cd src/app_rc/
 
-In the app_rc folder, you can see the startup and control code used to implement RC applications. To achieve RC application functionality, you can upload the directory contents to the onboard file system directory of Controller Core.
+In the app_rc folder, you can see the startup and control code used to implement RC applications. To achieve RC application functionality, you can upload the directory contents to the onboard file system directory of Multi-Function Core Board.
 
 It is recommended to use the mpy_cross tool to convert [control.py](src/app_rc/app/control.py) and [parser.py](src/app_rc/app/parser.py) into bytecode in (.mpy) format, with the same name as the (.py) program. When encountering the problem of insufficient RAM space during program execution.
 
@@ -38,4 +38,4 @@ It is recommended to use the mpy_cross tool to convert [control.py](src/app_rc/a
 
     $ cd src/app_timelapse/
 
-Enter the timelapse code directory, upload the directory contents to the onboard file system directory of Controller Core.
+Enter the timelapse code directory, upload the directory contents to the onboard file system directory of Multi-Function Core Board.

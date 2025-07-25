@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath('../src/app_rc'))
 sys.path.insert(0, os.path.abspath('../src/app_rc/bbl'))
 sys.path.insert(0, os.path.abspath('../src/app_rc/libs'))
 
-_DOC_VERSION = 'V01.00.00.01'
+_DOC_VERSION = 'V01.00.00.02'
 _DOC_ALL_VERSIONS = None
 
 # The MICROPY_VERSION env var should be "vX.Y.Z" (or unset).
@@ -330,6 +330,6 @@ texinfo_documents = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {"python": ("https://docs.python.org/3.5", None)}
 
-autodoc_mock_imports = ['machine', 'neopixel', 'uasyncio']
+autodoc_mock_imports = ['machine', 'neopixel', 'uasyncio', 'utime']
 
 autodoc_default_options = {'ignore-module-all': True}

@@ -182,16 +182,16 @@ code should always use* ``import module`` *rather than* ``import umodule``.
 
 .. _micropython_lib_moditications:
 
-Modifications to built-in MicroPython interfaces on CyberBrick Controller Core
-------------------------------------------------------------------------------
+Modifications to built-in MicroPython interfaces on CyberBrick Multi-Function Core Board
+------------------------------------------------------------------------------------------
 
 To protect intellectual property and ensure the stability of both software and hardware, 
-the CyberBrick Controller Core modifies the default MicroPython firmware 
+the CyberBrick Multi-Function Core Board modifies the default MicroPython firmware 
 by removing certain built-in APIs that could potentially bypass system safeguards, 
 compromise storage integrity, or allow unauthorized low-level access.
 
 The following built-in APIs have been intentionally **disabled or removed** in
-the CyberBrick Controller Core firmware:
+the CyberBrick Multi-Function Core Board firmware:
 
 - ``uos.dupterm``
 - ``os.dupterm``

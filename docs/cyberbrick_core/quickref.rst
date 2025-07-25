@@ -1,16 +1,16 @@
 .. _esp32_quickref:
 
-Quick reference for the CyberBrick Controller Core (ESP32-C3)
-=============================================================
+Quick reference for the CyberBrick Multi-Function Core Board (ESP32-C3)
+========================================================================
 
 .. image:: img/Controller_core.png
-    :alt: Controller Core
+    :alt: Multi-Function Core Board
     :width: 640px
 
-The Controller Core Board (ESP32-C3 Development Board).
+The Multi-Function Core Board (ESP32-C3 Development Board).
 
 The following content comes from the "Quick reference for the ESP32" section of the micropython documentation, 
-which has been modified to accommodate the CyberBrick Controller Core chip (ESP32-C3).
+which has been modified to accommodate the CyberBrick Multi-Function Core Board (ESP32-C3).
 
 General board control
 ---------------------

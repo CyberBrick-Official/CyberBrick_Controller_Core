@@ -1,7 +1,7 @@
 Getting Started with CyberBrick Core
 ====================================
 
-Welcome to the MicroPython beginner's tutorial for the Controller Core. This guide will walk you through setting up the development environment, basic programming, and common applications.
+Welcome to the MicroPython beginner's tutorial for the Multi-Function Core Board. This guide will walk you through setting up the development environment, basic programming, and common applications.
 
 This tutorial is intended to get you started using MicroPython on the ESP32-C3
 system-on-a-chip.  If it is your first time it is recommended to follow the
@@ -17,9 +17,9 @@ to `<https://www.python.org>`__.
 1. Setting Up the Development Environment
 -----------------------------------------
 
-The Controller Core supports MicroPython programming directly without needing to re-flash the firmware. To set up your development environment using Visual Studio Code (VSCode), follow the steps below:​
+The Multi-Function Core Board supports MicroPython programming directly without needing to re-flash the firmware. To set up your development environment using Visual Studio Code (VSCode), follow the steps below:
 
-- A Controller Core
+- A Multi-Function Core Board
 - A USB-C cable
 - A computer (Windows, macOS, or Linux)
 - Visual Studio Code (https://code.visualstudio.com/)
@@ -43,7 +43,7 @@ to choose a more suitable development environment.
 
 REPL (Read Evaluate Print Loop) is an interactive terminal for MicroPython, allowing you to quickly test code and run commands.
 
-You can refer to this website (https://docs.micropython.org/en/latest/zephyr/tutorial/repl.html) to connect to connect to the REPL of the Controller Core.
+You can refer to this website (https://docs.micropython.org/en/latest/zephyr/tutorial/repl.html) to connect to connect to the REPL of the Multi-Function Core Board.
 
 Once connected to REPL, you can enter Python code and execute it immediately.
 
@@ -56,7 +56,7 @@ Example:
 3. Basic Usage
 --------------
 
-On the Controller Core, you can use MicroPython to control peripherals such as GPIO, 
+On the Multi-Function Core Board, you can use MicroPython to control peripherals such as GPIO, 
 I2C, and PWM. For example, to light up the onboard RGB, 
 to light up the onboard RGB, Make it light up the red light:
 
@@ -84,7 +84,7 @@ Additionally, you can control GPIO pins, such as setting IO2 to high:
 4. File System
 --------------
 
-The Controller Core includes a file system formatted in FAT, stored in the flash memory behind the MicroPython firmware.
+The Multi-Function Core Board includes a file system formatted in FAT, stored in the flash memory behind the MicroPython firmware.
 
 You can use the `os` module to interact with the file system. For example, to list files:
 
