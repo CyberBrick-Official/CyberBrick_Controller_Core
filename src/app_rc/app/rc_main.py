@@ -21,7 +21,7 @@ async def master_init():
     import rc_module
 
     logger = ulogger.Logger()
-    logger.info("[MAIN]MASTER INIT.")
+    logger.info("[MAIN]MASTER_INIT.")
 
     if rc_module.rc_master_init() is False:
         return
@@ -34,7 +34,7 @@ async def master_init():
     await uasyncio.gather(rc_task())
 
 
-conf_updata_flag = True
+conf_update_flag = True
 
 
 async def slave_init():
@@ -43,7 +43,7 @@ async def slave_init():
     import ujson
 
     logger = ulogger.Logger()
-    logger.info("[MAIN]SLAVE INIT.")
+    logger.info("[MAIN]SLAVE_INIT.")
 
     if rc_module.rc_slave_init() is False:
         return
@@ -56,27 +56,27 @@ async def slave_init():
     bbl_controller = BBL_Controller()
 
     async def period_task():
-        global conf_updata_flag
+        global conf_update_flag
 
         while True:
-            updata_flag = rc_module.file_transfer()
-            if updata_flag is True:
-                logger.info("[MAIN]CONFIG UPDATE. ")
-                conf_updata_flag = True
+            update_flag = rc_module.file_transfer()
+            if update_flag is True:
+                logger.info("[MAIN]CONFIG_UPDATE. ")
+                conf_update_flag = True
 
             await uasyncio.sleep(0.5)
 
     async def control_task():
         EMPTY_DATA = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        global conf_updata_flag
+        global conf_update_flag
         setting = None
         rc_index = 0
 
         while True:
             try:
-                if conf_updata_flag is True:
+                if conf_update_flag is True:
                     # Free memory before load file.
-                    conf_updata_flag = False
+                    conf_update_flag = False
                     bbl_controller.reinit()
                     rc_conf = None
                     setting = None
@@ -87,7 +87,7 @@ async def slave_init():
                             rc_conf = ujson.load(f)
                             gc.collect()
                     except Exception as e:
-                        logger.warn(f"[MAIN]CFG LOAD ERR:{e}.")
+                        logger.warn(f"[MAIN]CFG_LOAD_ERR:{e}.")
                     gc.collect()
 
                     rc_index = rc_module.rc_index()
@@ -97,7 +97,7 @@ async def slave_init():
                     del rc_conf
                     gc.collect()
 
-                    logger.info(f"[MAIN]PRASE UPDATE: {rc_index}")
+                    logger.info(f"[MAIN]PARSE_UPDATE: {rc_index}")
                     bbl_controller.reinit()
 
                 rc_data = rc_module.rc_slave_data()
@@ -105,7 +105,7 @@ async def slave_init():
 
                 if rc_index != rc_module.rc_index():
                     # Must update config
-                    conf_updata_flag = True
+                    conf_update_flag = True
                     continue
 
                 if rc_data and setting and rc_data != EMPTY_DATA:
@@ -114,7 +114,7 @@ async def slave_init():
                     bbl_controller.stop('BEHAVIOR')
             except Exception as e:
                 bbl_controller.reinit()
-                logger.error(f"[MAIN]CRTL TASK: {e}")
+                logger.error(f"[MAIN]CTRL_TASK: {e}")
                 machine.reset()
             bbl_controller.board_key_handler()
             await uasyncio.sleep(0.02)
@@ -127,7 +127,7 @@ async def slave_init():
                     try:
                         sim_case = ujson.loads(sim_case)
                     except Exception as e:
-                        logger.error(f"[MIAN][SIM_LOADS] {e}")
+                        logger.error(f"[MAIN][SIM_LOADS] {e}")
                         continue
                     setting = data_parser.parse_simulation_setting(sim_case)
                     value = data_parser.parse_simulation_value(sim_case)
@@ -138,7 +138,7 @@ async def slave_init():
                 bbl_controller.simulation_effect_handle()
             except Exception as e:
                 bbl_controller.reinit()
-                logger.error(f"[MAIN]SIM TASK: {e}")
+                logger.error(f"[MAIN]SIM_TASK: {e}")
                 machine.reset()
             await uasyncio.sleep(0.02)
 

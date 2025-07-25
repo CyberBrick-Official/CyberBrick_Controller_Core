@@ -249,7 +249,7 @@ class MusicController:
         self.stop()
         self.buzzer.reinit()
 
-    def _rtttl_prase(self, rtttl_str):
+    def _rtttl_parse(self, rtttl_str):
         try:
             title, defaults, song = rtttl_str.split(':')
             d, o, b = defaults.split(',')
@@ -303,7 +303,7 @@ class MusicController:
         Example:
             >>> music.play('Entertainer:d=4,o=5,b=140:8d,8d#,8e,c6', volume=80)
         """
-        self.tune = self._rtttl_prase(tune)
+        self.tune = self._rtttl_parse(tune)
         self.volume = volume
         if type(self.tune) is not list:
             return self.tune

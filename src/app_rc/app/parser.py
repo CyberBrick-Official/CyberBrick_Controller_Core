@@ -214,7 +214,7 @@ class DataParser:
                 parsed_channels[key] = {
                     "short": [],
                     "long": [],
-                    "dowm": [],
+                    "down": [],
                     "release": []
                 }
         return parsed_channels
