@@ -385,7 +385,7 @@ class ServosControllerExecMapper(ServosController):
         self._permission_handle()
         return self.singleton.set_angle_step(servo_idx, step_speed)
 
-    def reset_info(self, servo_idx, angle, radPSec=4, call_freq=100):
+    def reset_info(self, servo_idx, angle, radPSec=8.05, call_freq=100):
         self._permission_handle()
         return self.singleton.reset_info(servo_idx, angle, radPSec, call_freq)
 

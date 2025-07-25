@@ -108,12 +108,18 @@ class ServosController:
 
         internal_idx = servo_idx - 1
 
+        if step_speed is not None:
+            self.servos_info_map[internal_idx]["vel"] = step_speed
+
+        if self.servos_info_map[internal_idx]["vel"] == 100:
+            self.set_angle(servo_idx, angle)
+            self.servos_info_map[internal_idx]["rh_ang"] = angle
+            self.servos_info_map[internal_idx]["c_ang"] = angle
+            return
+
         cur_angle = self.servos_info_map[internal_idx]["c_ang"]
         self.servos_info_map[internal_idx]["rh_ang"] = cur_angle
         self.servos_info_map[internal_idx]["s_ang"] = angle
-
-        if step_speed is not None:
-            self.servos_info_map[internal_idx]["vel"] = step_speed
 
         self.servos_info_map[internal_idx]["step_en"] = True
 
@@ -136,7 +142,7 @@ class ServosController:
         internal_idx = servo_idx - 1
         self.servos_info_map[internal_idx]["vel"] = step_speed
 
-    def reset_info(self, servo_idx, angle, radPSec=4, call_freq=100):
+    def reset_info(self, servo_idx, angle, radPSec=8.05, call_freq=100):
         """
         Resets the information for a servo motor, \
             including its current angle and step configuration.
