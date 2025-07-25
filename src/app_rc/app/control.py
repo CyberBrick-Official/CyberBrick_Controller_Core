@@ -536,7 +536,7 @@ class BBL_Controller:
         self.adv_last_rc_data = [0] * 6
         self.adv_cur_rc_data = [2048] * 6
         self.cycle_time = 0.02
-        self.updata_tar_speed_threadhold = 200
+        self.update_tar_speed_threshold = 200
 
         self.en_simulation_time = 0
         self.motors_simulation_speed = [0] * 2
@@ -1085,7 +1085,7 @@ class BBL_Controller:
         if en is True:
             if abs(
                     last_tar_speed - target_speed
-            ) > self.updata_tar_speed_threadhold or elapsed_time > \
+            ) > self.update_tar_speed_threshold or elapsed_time > \
                     self.high_speed_duration[motor_idx]:
                 elapsed_time = 0
             if (abs(target_speed) > 2048 * (
