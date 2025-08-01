@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath('../src/app_rc'))
 sys.path.insert(0, os.path.abspath('../src/app_rc/bbl'))
 sys.path.insert(0, os.path.abspath('../src/app_rc/libs'))
 
-_DOC_VERSION = 'V01.00.00.02'
+_DOC_VERSION = 'V01.00.00.03'
 _DOC_ALL_VERSIONS = None
 
 # The MICROPY_VERSION env var should be "vX.Y.Z" (or unset).

@@ -19,6 +19,41 @@ This module provides functionality for radio control (RC) slave operations.
 
       rc_module.rc_master_init()
 
+.. function:: rc_master_data()
+
+   Retrieves the current RC data.
+
+   **Description**
+
+   This function returns the current RC data from the RC suite's remote control transmitter. 
+   `rc_master_data()` 
+   returns a tuple corresponding to the transmitter's interface numbers: [L1, L2, L3, R1, R2, R3, K1, K2, K3, K4]. 
+   The first six elements are ADC values [0, 4095] from the transmitter's six joystick channels, 
+   and the last four elements are high/low states [0, 1] from the transmitter's four button IOs. 
+   For example, [1885, 1960, 1992, 2106, 1945, 2009, 1, 1, 1, 1].
+
+   **Parameters**
+
+   None
+
+   **Returns**
+
+   A tuple containing the current RC data, or None if no data is available.
+
+   **Example**
+
+   .. code-block:: python
+
+      import rc_module
+
+      rc_module.rc_master_init()
+      rc_data = rc_module.rc_master_data()
+      if rc_data:
+          print("Joystick ADC values:", rc_data[:6])
+          print("Button states:", rc_data[6:])
+      else:
+          print("No data is available.")
+
 .. function:: rc_slave_init()
 
    Initializes the RC slave module.
@@ -66,8 +101,8 @@ This module provides functionality for radio control (RC) slave operations.
 
       import rc_module
 
-      rc_module.init()
-      rc_data = rc_module.rc_data()
+      rc_module.rc_slave_init()
+      rc_data = rc_module.rc_slave_data()
       if rc_data:
           print("Joystick ADC values:", rc_data[:6])
           print("Button states:", rc_data[6:])
@@ -129,4 +164,36 @@ This module provides functionality for radio control (RC) slave operations.
          simulation = rc_module.rc_simulation()
          if simulation:
             print("RC simulation:", simulation)
+         time.sleep(0.1)
+
+.. function:: file_transfer()
+
+   Synchronizes the RC configuration file from the CyberBrick App or PC.
+
+   **Description**
+
+   This function is used to synchronize the configuration file 
+   named ``rc_config`` (in JSON format) from the CyberBrick App or a PC client. 
+   The ``rc_config`` file contains parameters relevant to RC operations 
+   such as channel mappings, thresholds, or user-defined presets. 
+   The function should be polled regularly to ensure timely updates.
+
+   **Parameters**
+
+   None
+
+   **Returns**
+
+   ``True`` if a new configuration file has been received and synchronized; ``False`` otherwise.
+
+   **Example**
+
+   .. code-block:: python
+
+      import time
+      import rc_module
+
+      while True:
+         if rc_module.file_transfer():
+            print("New RC configuration received.")
          time.sleep(0.1)
