@@ -115,7 +115,7 @@ async def slave_init():
             except Exception as e:
                 bbl_controller.reinit()
                 logger.error(f"[MAIN]CTRL_TASK: {e}")
-                machine.reset()
+                sys.exit()
             bbl_controller.board_key_handler()
             await uasyncio.sleep(0.02)
 
@@ -139,7 +139,7 @@ async def slave_init():
             except Exception as e:
                 bbl_controller.reinit()
                 logger.error(f"[MAIN]SIM_TASK: {e}")
-                machine.reset()
+                sys.exit()
             await uasyncio.sleep(0.02)
 
     await uasyncio.gather(control_task(),
