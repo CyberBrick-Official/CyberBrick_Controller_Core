@@ -661,7 +661,7 @@ class BBL_Controller:
             pwm_config = setting.get(f"receiver_{recv_idx}", {}).get("pwm", [])
 
             if pwm_idx - 1 < len(pwm_config):
-                bias, vel, min_value, max_value, pwm_type = pwm_config[pwm_idx - 1]
+                initial_value, vel, min_value, max_value, pwm_type = pwm_config[pwm_idx - 1]
             else:
                 raise IndexError(f"pwm_idx {pwm_idx} is out of range for receiver_{recv_idx}.")
 
@@ -841,10 +841,10 @@ class BBL_Controller:
             return int(-abs(motor_speed))
 
     def _servo_handler(self, rc_data, pwm_index):
-        bias, speed, min_value, max_value, pwm_type = self.setting[
+        initial_value, speed, min_value, max_value, bias, pwm_type = self.setting[
             f"receiver_{self.receiver_index}"]["pwm"][pwm_index - 1]
 
-        # bias = bias * 2048 / 100
+        # initial_value = initial_value * 2048 / 100
 
         pwm_control = self.setting["sender"][f"p{pwm_index}"]
 
@@ -866,7 +866,7 @@ class BBL_Controller:
             rc_value = (round(rc_value)) * 10 + 0
         elif pwm_type == "angle":
             rc_value = (rc_value * (max_value - min_value) /
-                        4096) + (max_value + min_value) / 2
+                        4096) + bias + (max_value + min_value)/2
             rc_value = self.get_valid_value(rc_value, 0, 180)
             rc_value = (round(rc_value)) * 10 + 1
         return int(rc_value)

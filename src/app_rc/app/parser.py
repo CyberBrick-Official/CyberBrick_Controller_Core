@@ -276,10 +276,11 @@ class DataParser:
                 data.get("speed", 0),
                 data.get("min_value", 0),
                 data.get("max_value", 0),
+                data.get("bias", 0),
                 data.get("type", "")
             ]
         else:
-            pwm_data = [0, 0, 0, 0, ""]
+            pwm_data = [0, 0, 0, 0, 0, ""]
         return pwm_data
 
     def _parse_motor(self, data, motor_idx):
