@@ -1011,12 +1011,12 @@ class BBL_Controller:
         return min(max(value, min_val), max_val)
 
     def timer0_callback(self, timer):
-        for dev in self.d_ch_map:
-            if dev is not None:
-                dev.timing_proc()
 
         if self.tim0_div_cnt == 0:
             self.servos.timing_proc()
+            for dev in self.d_ch_map:
+                if dev is not None:
+                    dev.timing_proc()
 
         self.tim0_div_cnt = (self.tim0_div_cnt + 1) % 10
 

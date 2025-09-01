@@ -13,6 +13,11 @@ import math
 LED_CHANNEL1 = 21
 LED_CHANNEL2 = 20
 
+sin_table = [int(512 * (1 + math.sin(2 * math.pi * i / 256 - math.pi/2)))
+             for i in range(256)]
+
+del math
+
 
 class NeoPixel:
     # NeoPixel driver for MicroPython
@@ -115,6 +120,7 @@ pin configuration.
         self.effects = [
             self._solid_effect, self._blink_effect, self._breathing_effect
         ]
+        self.sin_table = sin_table
         self.channel = led_channel
         self.current_effect_index = 0
         self.repeat_count = 0
@@ -145,22 +151,15 @@ pin configuration.
         current_time = utime.ticks_ms()
         elapsed_time = utime.ticks_diff(current_time,
                                         self.current_effect_start_time)
-
-        # Calculate duty cycle based on elapsed time and duration
-        progress = (elapsed_time % self.duration) / self.duration
-
-        # Sine wave pattern for smooth breathing (0 to 1 to 0)
-        self.duty_cycle = int(512 * (1 + math.sin(2 * math.pi * progress - math.pi/2)))
-
-        # Calculate the duty cycle factor once for use in all colors
-        duty_factor = self.duty_cycle / 1024.0
+        index = (elapsed_time % self.duration) * 256 // self.duration
+        self.duty_cycle = self.sin_table[index]
 
         for i in range(4):
             if self.led_index & (1 << i):
-                red = int(((self.rgb >> 16) & 0xFF) * duty_factor)
-                green = int(((self.rgb >> 8) & 0xFF) * duty_factor)
-                blue = int((self.rgb & 0xFF) * duty_factor)
-                self.np[i] = (red, green, blue)
+                r = (self.duty_cycle * ((self.rgb >> 16) & 0xFF)) // 1024
+                g = (self.duty_cycle * ((self.rgb >> 8) & 0xFF)) // 1024
+                b = (self.duty_cycle * (self.rgb & 0xFF)) // 1024
+                self.np[i] = (r, g, b)
             else:
                 self.np[i] = (0, 0, 0)
         self.np.write()
