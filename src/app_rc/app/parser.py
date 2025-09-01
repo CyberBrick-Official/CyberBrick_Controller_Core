@@ -309,7 +309,7 @@ class DataParser:
 
     def _parse_led(self, data):
         mode = 1 if data.get("mode", "") == "blink" else 0
-        rgb_value = int(data.get("RGB", 0x000000), 16)
+        rgb_value = int(data.get("RGB", "0x000000"), 16)
 
         led_data = [data["effect"],
                     data["sequence_number"],
