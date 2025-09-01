@@ -1011,8 +1011,6 @@ class BBL_Controller:
         return min(max(value, min_val), max_val)
 
     def timer0_callback(self, timer):
-        self.motors.motors_period_cb()
-
         for dev in self.d_ch_map:
             if dev is not None:
                 dev.timing_proc()

@@ -6,14 +6,19 @@
 #
 
 from machine import Pin
+import easypwm
 
-MOTOR1_CHANNEL1 = 4
-MOTOR1_CHANNEL2 = 5
-MOTOR2_CHANNEL1 = 6
-MOTOR2_CHANNEL2 = 7
+MOTOR1_CH1  = 0
+MOTOR1_CH2  = 1
+MOTOR2_CH1  = 2
+MOTOR2_CH2  = 3
 
-PERIOD = 20
+MOTOR1_PIN1 = 4
+MOTOR1_PIN2 = 5
+MOTOR2_PIN1 = 6
+MOTOR2_PIN2 = 7
 
+DUTY_MAX = 100.0
 
 class MotorsController:
     """
@@ -49,68 +54,21 @@ class MotorsController:
             return
         self._initialized = True
 
-        self.motor1_1 = Pin(MOTOR1_CHANNEL1, Pin.OUT)
-        self.motor1_2 = Pin(MOTOR1_CHANNEL2, Pin.OUT)
-        self.motor2_1 = Pin(MOTOR2_CHANNEL1, Pin.OUT)
-        self.motor2_2 = Pin(MOTOR2_CHANNEL2, Pin.OUT)
+        easypwm.init()
+        easypwm.config(MOTOR1_CH1, MOTOR1_PIN1)
+        easypwm.config(MOTOR1_CH2, MOTOR1_PIN2)
+        easypwm.config(MOTOR2_CH1, MOTOR2_PIN1)
+        easypwm.config(MOTOR2_CH2, MOTOR2_PIN2)
 
-        self.motor1_1_duty = 0
-        self.motor1_2_duty = 0
-        self.motor2_1_duty = 0
-        self.motor2_2_duty = 0
+        easypwm.duty(MOTOR1_CH1, DUTY_MAX)
+        easypwm.duty(MOTOR1_CH2, DUTY_MAX)
+        easypwm.duty(MOTOR2_CH1, DUTY_MAX)
+        easypwm.duty(MOTOR2_CH2, DUTY_MAX)
 
         self.motor_params = {
             1: {'forward_speed': 100, 'reverse_speed': 100, 'offset': 0},
             2: {'forward_speed': 100, 'reverse_speed': 100, 'offset': 0}
         }
-
-        self.period_cnt = 0
-
-        self.motor1_1.on()
-        self.motor1_2.on()
-        self.motor2_1.on()
-        self.motor2_2.on()
-
-    def motors_period_cb(self):
-        """
-        Updates the duty cycles of the motors based on the current motor duty.
-        This method simulates PWM
-        by turning the motors on and off in intervals,
-        adjusting the duty cycles based on the PWM timing signal.
-
-        This method should be called periodically to update motor speed.
-        Example:
-            >>> motors.motors_period_cb()  # Periodically update motor speed
-        """
-        self.period_cnt = (self.period_cnt + 1) % PERIOD
-
-        if self.motor1_1_duty == 0 and self.motor1_2_duty == 0:
-            self.motor1_1.on()
-            self.motor1_2.on()
-        else:
-            if self.period_cnt >= self.motor1_1_duty:
-                self.motor1_1.off()
-            else:
-                self.motor1_1.on()
-
-            if self.period_cnt >= self.motor1_2_duty:
-                self.motor1_2.off()
-            else:
-                self.motor1_2.on()
-
-        if self.motor2_1_duty == 0 and self.motor2_2_duty == 0:
-            self.motor2_1.on()
-            self.motor2_2.on()
-        else:
-            if self.period_cnt >= self.motor2_1_duty:
-                self.motor2_1.off()
-            else:
-                self.motor2_1.on()
-
-            if self.period_cnt >= self.motor2_2_duty:
-                self.motor2_2.off()
-            else:
-                self.motor2_2.on()
 
     def set_speed(self, motor_idx, speed):
         """
@@ -140,8 +98,12 @@ class MotorsController:
         """
         if motor_idx == 1:
             self.motor1_1_duty, self.motor1_2_duty = self._speed_handler(speed)
+            easypwm.duty(MOTOR1_CH1, self.motor1_1_duty)
+            easypwm.duty(MOTOR1_CH2, self.motor1_2_duty)
         elif motor_idx == 2:
             self.motor2_1_duty, self.motor2_2_duty = self._speed_handler(speed)
+            easypwm.duty(MOTOR2_CH1, self.motor2_1_duty)
+            easypwm.duty(MOTOR2_CH2, self.motor2_2_duty)
         else:
             print("[motors]Invalid motor index. Must be between 1 and 2.")
 
@@ -158,15 +120,12 @@ class MotorsController:
             >>> motors.stop(2)  # Stop motor 2
         """
         if motor_idx == 1:
-            self.motor1_1_duty = 0
-            self.motor1_2_duty = 0
-            self.motor1_1.on()
-            self.motor1_2.on()
+            easypwm.duty(MOTOR1_CH1, DUTY_MAX)
+            easypwm.duty(MOTOR1_CH2, DUTY_MAX)
+
         elif motor_idx == 2:
-            self.motor2_1_duty = 0
-            self.motor2_2_duty = 0
-            self.motor2_1.on()
-            self.motor2_2.on()
+            easypwm.duty(MOTOR2_CH1, DUTY_MAX)
+            easypwm.duty(MOTOR2_CH2, DUTY_MAX)
         else:
             raise ValueError(
                 "[motors]Invalid motor index. Must be between 1 and 2.")
@@ -255,7 +214,7 @@ class MotorsController:
             >>> motors.get_forward_rate(1)
             >>> # Returns 80 (if motor 2's forward speed is set to 80)
             >>> motors.get_forward_rate(2)
-    """
+        """
         if motor_idx in self.motor_params:
             return self.motor_params[motor_idx]['forward_speed']
         else:
@@ -316,12 +275,12 @@ class MotorsController:
                 the two motor channels.
         """
         if speed > 0:
-            pwm1 = int(speed * PERIOD / 2048)
-            pwm2 = 0
+            pwm1 = int(speed * DUTY_MAX / 2048.0 + 0.5)
+            pwm2 = 0.0
         elif speed < 0:
-            pwm1 = 0
-            pwm2 = int(-speed * PERIOD / 2048)
+            pwm1 = 0.0
+            pwm2 = int(-speed * DUTY_MAX / 2048.0 + 0.5)
         else:
-            pwm1 = 0
-            pwm2 = 0
+            pwm1 = 0.0
+            pwm2 = 0.0
         return pwm1, pwm2
