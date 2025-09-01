@@ -308,6 +308,9 @@ class DataParser:
         return motor_data, advanced_config
 
     def _parse_led(self, data):
+        if not data:
+            return []
+
         mode = 1 if data.get("mode", "") == "blink" else 0
         rgb_value = int(data.get("RGB", "0x000000"), 16)
 
@@ -318,10 +321,12 @@ class DataParser:
                     data.get("repeat_times", 0),
                     data.get("time", 0)
                     ]
-
         return led_data
 
     def _parse_buzzer(self, data):
+        if not data:
+            return []
+
         buzzer_data = [
             data.get("effect", -1),
             data.get("volume", -1),
@@ -331,6 +336,9 @@ class DataParser:
         return buzzer_data
 
     def _parse_codes(self, data):
+        if not data:
+            return []
+
         code_data = [
             data.get("effect", -1),
             data.get("code", "")
