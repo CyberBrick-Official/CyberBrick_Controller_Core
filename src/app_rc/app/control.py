@@ -661,7 +661,7 @@ class BBL_Controller:
             pwm_config = setting.get(f"receiver_{recv_idx}", {}).get("pwm", [])
 
             if pwm_idx - 1 < len(pwm_config):
-                initial_value, vel, min_value, max_value, pwm_type = pwm_config[pwm_idx - 1]
+                initial_value, vel, min_value, max_value, bias, pwm_type = pwm_config[pwm_idx - 1]
             else:
                 raise IndexError(f"pwm_idx {pwm_idx} is out of range for receiver_{recv_idx}.")
 
@@ -669,7 +669,7 @@ class BBL_Controller:
             if pwm_type == "speed":
                 effect_value = effect_value * 10 + 0
             elif pwm_type == "angle":
-                effect_value = effect_value * 10 + 1
+                effect_value = int(effect_value + bias) * 10 + 1
 
             if mode == "simulation":
                 self.servo_simulation_data[pwm_idx - 1] = effect_value
