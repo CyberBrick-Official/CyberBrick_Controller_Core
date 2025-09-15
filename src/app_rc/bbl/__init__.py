@@ -10,9 +10,11 @@ from .servos import ServosController
 from .motors import MotorsController
 from .buzzer import MusicController
 from .executor import CommandExecutor
+from .sleepModule import SleepModule
 
 __all__ = ["LEDController",
            "ServosController",
            "MotorsController",
            "MusicController",
-           "CommandExecutor"]
+           "CommandExecutor",
+           "SleepModule"]

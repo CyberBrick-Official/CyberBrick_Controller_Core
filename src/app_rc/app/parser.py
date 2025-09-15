@@ -33,7 +33,7 @@ class DataParser:
             parsed_data (dict): The parsed data.
         """
         self.data_type = PARSER_NONE
-        self. id_multiplier = Devices.get_base_multiplier()
+        self.id_multiplier = Devices.get_base_multiplier()
 
     def set_slave_idx(self, data_type):
         """
@@ -66,6 +66,7 @@ class DataParser:
                 if key == "sender":
                     parsed_data[key] = self._parse_channels(
                         value["channels"])
+                    parsed_data[key]["sleep"] = self._parse_dict(value.get("auto_sleep", {}))
                     data[key] = None
                     gc.collect()
                 if key == "receiver_1" and self.data_type == PARSER_RECEIVE1:
@@ -529,12 +530,11 @@ class DataParser:
 '''
 import ujson
 data_parser = DataParser()
-data_parser.set_slaver_idx(PARSER_RECEIVE1)
-filename = 'bbl/test.json'
+data_parser.set_slave_idx(PARSER_RECEIVE1)
+filename = './rc_config'
 try:
     with open(filename, 'r') as f:
-        file_data = f.read()
-        data = ujson.loads(file_data)
+        data = ujson.load(f)
         parse_data = data_parser.parse(data)
         print(parse_data['receiver_1'])
         #print(parse_data['sender']['deadzones'], parse_data['sender']['mid_values'])
