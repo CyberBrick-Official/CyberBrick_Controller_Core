@@ -13,8 +13,8 @@ import math
 LED_CHANNEL1 = 21
 LED_CHANNEL2 = 20
 
-sin_table = [int(512 * (1 + math.sin(2 * math.pi * i / 256 - math.pi/2)))
-             for i in range(256)]
+# Precompute a sine table for breathing effect (0–255 brightness)
+sin_table = [int(255 * (1 + math.sin(2 * math.pi * i / 256 - math.pi/2)) / 2) for i in range(256)]
 
 del math
 
@@ -113,90 +113,74 @@ pin configuration.
 
         # Map LED1 and LED2 to their respective pin numbers
         self.led_pins_map = {"LED1": LED_CHANNEL1, "LED2": LED_CHANNEL2}
-
         if led_channel not in self.led_pins_map:
             raise ValueError("Invalid LED channel")
 
+        # Available effects: 0=Solid, 1=Blink, 2=Breathing
         self.effects = [
-            self._solid_effect, self._blink_effect, self._breathing_effect
+            self._solid_effect,
+            self._blink_effect,
+            self._breathing_effect
         ]
         self.sin_table = sin_table
         self.channel = led_channel
+
+        # Effect state variables
         self.current_effect_index = 0
         self.repeat_count = 0
         self.duration = 0
         self.current_effect_start_time = 0
-        self.duty_cycle = 0
         self.led_index = 0
         self.rgb = 0x000000
         self.is_on = False
 
+        # Initialize hardware NeoPixel object
         pin = Pin(self.led_pins_map[led_channel], Pin.OUT)
         self.np = NeoPixel(pin, 4, timing=0)
-
-        for i in range(4):
-            self.np[i] = (0, 0, 0)
+        self.np.fill((0, 0, 0))
         self.np.write()
 
     def reinit(self):
-        self.current_effect_index = 0
-        self.repeat_count = 0
-        self.duration = 0
-        self.current_effect_start_time = 0
+        """Reinitialize the LED controller state."""
+        self.__init__(self.channel)
 
-        pin = Pin(self.led_pins_map[self.channel], Pin.OUT)
-        self.np = NeoPixel(pin, 4, timing=0)
-
-    def _breathing_effect(self):
-        current_time = utime.ticks_ms()
-        elapsed_time = utime.ticks_diff(current_time,
-                                        self.current_effect_start_time)
-        index = (elapsed_time % self.duration) * 256 // self.duration
-        self.duty_cycle = self.sin_table[index]
-
+    # -------- Utility functions --------
+    def _apply_brightness(self, brightness):
+        """
+        Apply brightness scaling (0–255) to the currently selected LEDs.
+        """
+        r_base, g_base, b_base = (self.rgb >> 16) & 0xFF, (self.rgb >> 8) & 0xFF, self.rgb & 0xFF
         for i in range(4):
             if self.led_index & (1 << i):
-                r = (self.duty_cycle * ((self.rgb >> 16) & 0xFF)) // 1024
-                g = (self.duty_cycle * ((self.rgb >> 8) & 0xFF)) // 1024
-                b = (self.duty_cycle * (self.rgb & 0xFF)) // 1024
-                self.np[i] = (r, g, b)
+                self.np[i] = (
+                    (r_base * brightness) // 255,
+                    (g_base * brightness) // 255,
+                    (b_base * brightness) // 255
+                )
             else:
                 self.np[i] = (0, 0, 0)
         self.np.write()
 
+    # -------- Effect implementations --------
+    def _breathing_effect(self):
+        elapsed = utime.ticks_diff(utime.ticks_ms(), self.current_effect_start_time)
+        index = (elapsed % self.duration) * 256 // self.duration
+        self._apply_brightness(self.sin_table[index])
+
     def _blink_effect(self):
-        current_time = utime.ticks_ms()
-        elapsed_time = utime.ticks_diff(current_time,
-                                        self.current_effect_start_time)
-        if elapsed_time < self.duration / 2:
-            if self.is_on is False:
-                self.is_on = True
-                for i in range(4):
-                    if self.led_index & (1 << i):
-                        self.np[i] = ((self.rgb >> 16) & 0xFF,
-                                      (self.rgb >> 8) & 0xFF, self.rgb & 0xFF)
-                    else:
-                        self.np[i] = (0, 0, 0)
-                self.np.write()
-        else:
-            if self.is_on is True:
-                self.is_on = False
-                for i in range(4):
-                    self.np[i] = (0, 0, 0)
-                self.np.write()
+        elapsed = utime.ticks_diff(utime.ticks_ms(), self.current_effect_start_time)
+        half_duration = self.duration // 2
+        new_state = elapsed < half_duration
+        if new_state != self.is_on:  # Refresh only on state change
+            self.is_on = new_state
+            self._apply_brightness(255 if self.is_on else 0)
 
     def _solid_effect(self):
-        if self.is_on is False:
+        if not self.is_on:
             self.is_on = True
-            for i in range(4):
-                if self.led_index & (1 << i):
-                    self.np[i] = ((self.rgb >> 16) & 0xFF,
-                                  (self.rgb >> 8) & 0xFF, self.rgb & 0xFF)
-                else:
-                    self.np[i] = (0, 0, 0)
-                pass
-            self.np.write()
+            self._apply_brightness(255)
 
+    # -------- Runtime update logic --------
     def timing_proc(self):
         """
         Callback function to update the LED effect.
@@ -208,19 +192,28 @@ pin configuration.
         Returns:
             None
         """
-        current_effect = self.effects[self.current_effect_index]
-        current_effect()
+        if self.current_effect_index is None:
+            return
+        self.effects[self.current_effect_index]()
         self._update_effect()
 
     def _update_effect(self):
+        """
+        Check if the current effect's duration has elapsed and
+        update repeat counters or stop the effect.
+        """
         current_time = utime.ticks_ms()
-        elapsed_time = utime.ticks_diff(current_time,
-                                        self.current_effect_start_time)
+        elapsed_time = utime.ticks_diff(current_time, self.current_effect_start_time)
+
         if elapsed_time >= self.duration:
             if self.repeat_count != 0xFF:
                 self.repeat_count -= 1
+
             if self.repeat_count > 0:
                 self.current_effect_start_time = current_time
+            else:
+                # Stop effect when repeat count is exhausted
+                self.current_effect_index = None
 
     def set_led_effect(self, mod, duration, repeat_count, led_index, rgb):
         """
@@ -264,10 +257,10 @@ pin configuration.
                           int) or repeat_count < 0 or repeat_count > 255:
             print("[LEDS]Invalid repeat count.")
             return
+
         self.current_effect_index = mod
         self.duration = duration
         self.repeat_count = repeat_count
-        self.duty_cycle = 0
         self.led_index = led_index
         self.rgb = rgb
         self.is_on = False
@@ -286,12 +279,14 @@ if __name__ == '__main__':
         led_2 = LEDController("LED2")
 
         async def period_task():
+            """Background task to update LED states regularly."""
             while True:
                 led_1.timing_proc()
                 led_2.timing_proc()
                 await uasyncio.sleep(0.01)
 
         async def ctrl_task():
+            """Demo sequence: breathing → blink → solid."""
             while True:
                 led_1.set_led_effect(2, 800, 0xFF, 0x0F, COLOR_WHITE)
                 led_2.set_led_effect(2, 800, 0xFF, 0x0F, COLOR_WHITE)
