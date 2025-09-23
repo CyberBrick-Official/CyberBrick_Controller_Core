@@ -9,9 +9,10 @@
 import bbl_product
 import ble_module
 import shutter_module
+import time
 
 _PRODUCT_NAME = "SHUTTER"
-_PRODUCT_VERSION = "01.00.00.01"
+_PRODUCT_VERSION = "01.00.00.02"
 
 bbl_product.set_app_name(_PRODUCT_NAME)
 bbl_product.set_app_version(_PRODUCT_VERSION)
@@ -20,3 +21,7 @@ del bbl_product
 shutter_module.shutter_init()
 ble_module.ble_shutter_init()
 shutter_module.shutter_task_init()
+
+while True:
+    print("bbl shutter running")
+    time.sleep(1)
