@@ -67,13 +67,11 @@ class SleepModule:
 
     def disable(self):
         self.enabled = False
-        self.logger("[SLEEP] Monitoring disabled.")
         self.channels.clear()
         self.sleep_callback = None
 
     def enable(self):
         self.enabled = True
-        self.logger("[SLEEP] Monitoring enabled.")
 
 
 if __name__ == '__main__':

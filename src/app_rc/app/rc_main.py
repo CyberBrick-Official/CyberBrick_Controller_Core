@@ -114,6 +114,8 @@ async def master_init():
         sleep_trig_time = 5 * 60  # Default sleep trigger time: 5 minutes
 
         while True:
+            await _reload_configuration(data_parser, logger)
+
             sleep_module.enable()
 
             sleep_module.register_sleep_callback(sleep_handler)
@@ -130,6 +132,10 @@ async def master_init():
             if setting is not None and 'sender' in setting:
                 sleep_en = setting['sender'].get('sleep', {}).get('en', True)
             active = (cbsys.heartbeat_status() is cbsys.HEARTBEAT_ACTIVE)
+            if (not sleep_en) or active:
+                logger.info("[MAIN]AUTO_SLEEP_DIS.")
+            else:
+                logger.info("[MAIN]AUTO_SLEEP_EN.")
 
             while True:
                 # Wait for 1 second (non-blocking in uasyncio context)
@@ -146,7 +152,7 @@ async def master_init():
                     sleep_module.disable()
                     break
 
-                if not sleep_en or active:
+                if (not sleep_en) or active:
                     continue
 
                 rc_data = rc_module.rc_master_data()
