@@ -60,6 +60,7 @@ class CommandExecutor:
             self.status = "ERROR"
         finally:
             self.stop_event.set()
+        gc.collect()
 
     def _call_final_func(self):
         if self.final_func is not None:
@@ -133,6 +134,7 @@ class CommandExecutor:
             self._call_final_func()
         else:
             self.log_info("[EXEC]Execution already been stopped.")
+        gc.collect()
 
     def get_status(self) -> str:
         """Get status"""
@@ -140,45 +142,50 @@ class CommandExecutor:
 
     async def block_handle(self):
         while True:
-            if self.command != "":
-                if self.get_status() != "RUNNING":
-                    command_lines = self.command.split("\n")
-                    self.command = ""
-                    gc.collect()
+            if not self.command:
+                await asyncio.sleep(0.2)
+                continue
 
-                    formatted_code = ""
+            if self.get_status() == "RUNNING":
+                self.stop()
+                await asyncio.sleep(0.2)
+                continue
 
-                    for cmd in self._default_commands:
-                        formatted_code += "  " + cmd + "\n"
+            command_lines = self.command.split("\n")
+            self.command = ""
+            gc.collect()
 
-                    for i, line in enumerate(command_lines):
-                        if not self._is_safe(line):
-                            self.log_warn(f"[EXEC]Unsafe command - {line}")
-                            return
+            formatted_code = ""
 
-                        # Replace specific commands with remapped versions
-                        line = self._remap_commands(line)
+            for cmd in self._default_commands:
+                formatted_code += " " + cmd + "\n"
 
-                        formatted_code += "  " + line + "\n"  # Indent code block
+            for i, line in enumerate(command_lines):
+                if not self._is_safe(line):
+                    self.log_warn(f"[EXEC]Unsafe command - {line}")
+                    return
 
-                        line = ""
-                        gc.collect()
+                # Replace specific commands with remapped versions
+                line = self._remap_commands(line)
 
-                    # Replace (u)time.sleep() with await asyncio.sleep()
-                    formatted_code = re.sub(r"(time|utime)\.sleep\((.*?)\)",
-                                            r"await asyncio.sleep(\2)",
-                                            formatted_code)
-                    # Replace while True: with while not stop_event.is_set():
-                    formatted_code = re.sub(r"while\s+(True|1):",
-                                            "while not stop_event.is_set():",
-                                            formatted_code)
-                    # self.log_debug(f"[EXEC]Formatted code:\n{async_code}")
+                formatted_code += " " + line + "\n"  # Indent code block
 
-                    asyncio.create_task(self._execute(formatted_code))
-                    formatted_code = None
-                    gc.collect()
-                else:
-                    self.stop()
+            # Replace (u)time.sleep() with await asyncio.sleep()
+            formatted_code = re.sub(
+                r"(time|utime)\.sleep\((.*?)\)",
+                r"await asyncio.sleep(\2)",
+                formatted_code)
+            # Replace while True: with while not stop_event.is_set():
+            formatted_code = re.sub(
+                r"while\s+(True|1):",
+                "while not stop_event.is_set():",
+                formatted_code)
+            # self.log_debug(f"[EXEC]Formatted code:\n{async_code}")
+
+            asyncio.create_task(self._execute(formatted_code))
+            formatted_code = None
+            gc.collect()
+
             await asyncio.sleep(0.2)
 
     def run(self, cmd):
@@ -188,20 +195,12 @@ class CommandExecutor:
 
 if __name__ == "__main__":
     async def start():
-        import sys
-        sys.path.append("/ulogger")
-        import logunit
-        logger = logunit.get_logger()
-
         default_cmds = [
-            'import sys',
-            'sys.path.append("/bbl")',
             'import uasyncio as asyncio',
-            'from bbl_control import MotorsControllerExecMapper',
-            'from bbl_control import ServosControllerExecMapper'
         ]
 
         remap_rules = {
+            "bbl.motors": "control",
             "MotorsController": "MotorsControllerExecMapper",
             "ServosController": "ServosControllerExecMapper",
         }
@@ -211,14 +210,10 @@ if __name__ == "__main__":
             'eval', 'exec', 'os.', 'subprocess', 'os.remove', 'os.rmdir'
         ]
 
-        executor = CommandExecutor(None,
-                                   logger.debug,
-                                   logger.info,
-                                   logger.warn,
-                                   logger.error)
+        executor = CommandExecutor(None)
         cmd = """
 import uasyncio as asyncio
-from bbl_control import MotorsController
+from bbl.motors import MotorsController
 motors = MotorsController()
 print("Multi-line command begins.")
 await asyncio.sleep(1)
@@ -233,7 +228,6 @@ while not stop_event.is_set():
         executor.register_remap_rules(remap_rules)
 
         async def do():
-
             executor.run(cmd)
             await asyncio.sleep(3)
 
