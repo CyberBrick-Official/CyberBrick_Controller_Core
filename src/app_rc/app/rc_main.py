@@ -265,9 +265,7 @@ class Clock(ulogger.BaseClock):
         return '%d' % (inv)
 
 
-if __name__ == "__main__":
-    from machine import Pin
-
+def main():
     rst_c = machine.reset_cause()
     log_clock = Clock()
 
@@ -304,10 +302,15 @@ if __name__ == "__main__":
     }
 
     logger.info("[MAIN]{}".format(rc2str.get(rst_c, str(rst_c))))
+    del rc2str
 
     # Check the role pin to determine if this is the master or slave instance
-    role_pin = Pin(10, Pin.IN)
+    role_pin = machine.Pin(10, machine.Pin.IN)
     if role_pin.value():
         uasyncio.run(master_init())
     else:
         uasyncio.run(slave_init())
+
+
+if __name__ == "__main__":
+    main()
