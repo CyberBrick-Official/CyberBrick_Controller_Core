@@ -458,8 +458,6 @@ class BBL_Controller:
         self.button_handler = ButtonHandler()
         self.led1 = LEDController("LED1")
         self.led2 = LEDController("LED2")
-        self.buzzer1 = MusicController("BUZZER1")
-        self.buzzer2 = MusicController("BUZZER2")
         self.executor = CommandExecutor(None,
                                         logger.debug,
                                         logger.info,
@@ -486,7 +484,6 @@ class BBL_Controller:
         ]
         code_exec_remap_rules = {
             "bbl.servos": "control",
-            "bbl.buzzer": "control",
             "bbl.leds": "control",
             "bbl.motors": "control",
             "MotorsController": "MotorsControllerExecMapper",
@@ -497,7 +494,7 @@ class BBL_Controller:
         self.executor.register_remap_rules(code_exec_remap_rules)
         self.executor.register_final_cb(self._executor_final_cb)
 
-        self.d_ch_map = [None] * 2  # LED or Buzzer channel map
+        self.d_ch_map = [None] * 2  # channel map
 
         self.setting = {}
         self.receiver_index = 0
@@ -553,18 +550,12 @@ class BBL_Controller:
             return
 
         leds_map = [self.led1, self.led2]
-        buzzers_map = [self.buzzer1, self.buzzer2]
 
         for i in range(2):
             if recv_info.get(f"led{i + 1}", []) != []:
                 self.d_ch_map[i] = leds_map[i]
                 self.d_ch_map[i].reinit()
                 self.d_ch_map[i].set_led_effect(0, 0, 0, 15, 0x000000)
-            elif recv_info.get(f"buzzer{i + 1}", []) != []:
-                self.d_ch_map[i] = buzzers_map[i]
-                self.d_ch_map[i].reinit()
-                # tune = "Converted:d=16,o=6,b=125:g5,c6,e5,8g6,e6,8g6"
-                # self.d_ch_map[i].play(tune, 5, False)
             else:
                 self.d_ch_map[i] = None
 
@@ -676,11 +667,6 @@ class BBL_Controller:
                 self._en_simulation_loop('SERVO', True)
             else:
                 self.servos_effect_data_list[pwm_idx - 1] = effect_value
-
-        # BUZZERS
-        elif effect_actor_idx in [Devices.BUZZER_1, Devices.BUZZER_2]:
-            buzzer_idx = effect_actor_idx - 8
-            self._buzzer_effect_trig(buzzer_idx, effect_actor_val, setting)
 
         # CODE
         elif effect_actor_idx == Devices.CODE_EXEC:
@@ -870,24 +856,6 @@ class BBL_Controller:
             rc_value = self.get_valid_value(rc_value, 0, 180)
             rc_value = (round(rc_value)) * 10 + 1
         return int(rc_value)
-
-    def _buzzer_effect_trig(self, buzzer_idx, song_idx, setting):
-        if not 1 <= buzzer_idx < 3:
-            logger.error(f"[CTRL]Invalid buzzer index:{buzzer_idx}")
-            return
-        recv_info = setting.get(f"receiver_{self.receiver_index}", {})
-        songs = recv_info.get(f"buzzer{buzzer_idx}", [])
-        for song in songs:
-            if song[0] == song_idx:
-                loop_en = False if song[2] != 255 else True
-                tune = song[3]
-                volume = song[1]
-                if buzzer_idx == 1:
-                    self.buzzer1.play(tune, volume, False, loop_en)
-                elif buzzer_idx == 2:
-                    self.buzzer2.play(tune, volume, False, loop_en)
-                logger.debug(f"[CTRL]Buzzer{buzzer_idx}: {song}")
-                return
 
     def _code_effect_trig(self, code_idx, setting):
         recv_info = setting.get(f"receiver_{self.receiver_index}", {})

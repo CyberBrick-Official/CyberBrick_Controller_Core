@@ -152,9 +152,7 @@ class DataParser:
             "adc_ch3": [],
             "adc_ch4": [],
             "adc_ch5": [],
-            "adc_ch6": [],
-            "buzzer1": [],
-            "buzzer2": []
+            "adc_ch6": []
         }
         for i, item in enumerate(channels[:6]):
             adc_ch_str = "adc_ch" + str(i + 1)
@@ -324,18 +322,6 @@ class DataParser:
                     ]
         return led_data
 
-    def _parse_buzzer(self, data):
-        if not data:
-            return []
-
-        buzzer_data = [
-            data.get("effect", -1),
-            data.get("volume", -1),
-            data.get("repeat_time", 1),
-            data.get("code", "")
-        ]
-        return buzzer_data
-
     def _parse_codes(self, data):
         if not data:
             return []
@@ -364,8 +350,6 @@ class DataParser:
             "motor": [],
             "led1": [],
             "led2": [],
-            "buzzer1": [],
-            "buzzer2": [],
             "codes": [],
             "advanced_config": []
         }
@@ -389,13 +373,6 @@ class DataParser:
             if led_data and "data" in led_data:
                 parse = self._parse_led
                 extracted_data[f"led{idx}"].extend(parse(item) for item in led_data["data"])
-
-        buzzer_keys = ("BUZZER1", "BUZZER2")
-        for idx, key in enumerate(buzzer_keys, 1):
-            buzzer_data = data.get(key)
-            if buzzer_data and "data" in buzzer_data:
-                parse = self._parse_buzzer
-                extracted_data[f"buzzer{idx}"].extend(parse(item) for item in buzzer_data["data"])
 
         codes = data.get("CODE")
         if codes and "data" in codes:
@@ -439,8 +416,6 @@ class DataParser:
             "motor": [],
             "led1": [],
             "led2": [],
-            "buzzer1": [],
-            "buzzer2": [],
             "codes": [],
             "advanced_config": []
         }
@@ -468,11 +443,6 @@ class DataParser:
 
         elif actuator_name.startswith("MOTOR"):
             pass
-
-        elif actuator_name.startswith("BUZZER"):
-            buzzer_number = int(actuator_name[-1])
-            data = self._parse_buzzer(actuator_data.get("data", []))
-            extracted_data[f"buzzer{buzzer_number}"].append(data)
 
         elif actuator_name == "CODE":
             data = self._parse_codes(actuator_data.get("data", []))
