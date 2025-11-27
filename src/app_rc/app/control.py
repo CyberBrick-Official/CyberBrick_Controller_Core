@@ -657,7 +657,7 @@ class BBL_Controller:
                 raise IndexError(f"pwm_idx {pwm_idx} is out of range for receiver_{recv_idx}.")
 
             effect_value = effect_actor_val
-            if pwm_type == "speed":
+            if pwm_type in ("speed", "pushrod"):
                 effect_value = effect_value * 10 + 0
             elif pwm_type == "angle":
                 effect_value = int(effect_value + bias) * 10 + 1
@@ -843,7 +843,7 @@ class BBL_Controller:
         for channel, direction in pwm_control:
             rc_value += rc_data[channel] * direction
 
-        if pwm_type == "speed":
+        if pwm_type in ("speed", "pushrod"):
             if rc_value <= 0:
                 rc_value = rc_value * min_value / 2048
             else:
