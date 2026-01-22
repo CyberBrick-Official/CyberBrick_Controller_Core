@@ -1,0 +1,6 @@
+{
+  "motors.invalid_index": "[motorlar] Geçersiz motor numarası. 1 veya 2 olmalıdır.",
+  "motors.invalid_index_or_param": "[motorlar] Geçersiz motor numarası veya parametre.",
+  "motors.param_out_of_range_0_100": "[motorlar] Parametre değeri 0–100 aralığında olmalıdır.",
+  "motors.param_out_of_range_-100_100": "[motorlar] Parametre değeri -100 ile 100 arasında olmalıdır."
+}
