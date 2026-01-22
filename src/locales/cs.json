@@ -1,0 +1,19 @@
+{
+  "motors.invalid_index": "Neplatné číslo motoru.",
+  "motors.invalid_index_or_param": "Neplatné číslo motoru nebo parametr.",
+  "motors.param_out_of_range_0_100": "Parametr musí být v rozsahu 0 až 100.",
+  "motors.param_out_of_range_-100_100": "Parametr musí být v rozsahu -100 až 100.",
+
+  "servo.invalid_index": "Neplatné číslo serva.",
+  "servo.invalid_angle_0_180": "Úhel musí být v rozsahu 0 až 180 stupňů.",
+  "servo.invalid_step_speed": "Rychlost kroku musí být v rozsahu 0 až 100.",
+  "servo.invalid_speed": "Rychlost musí být v rozsahu -100 až 100.",
+
+  "led_invalid_channel": "Neplatný LED kanál.",
+  "led_invalid_effect": "Neplatný režim LED efektu.",
+  "led_invalid_repeat": "Počet opakování musí být v rozsahu 0 až 255.",
+
+  "buzzer_invalid_channel": "Neplatný kanál bzučáku.",
+
+  "music_invalid_rtttl": "Neplatný formát RTTTL."
+}

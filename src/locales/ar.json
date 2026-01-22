@@ -1,0 +1,19 @@
+{
+  "motors.invalid_index": "رقم المحرك غير صالح.",
+  "motors.invalid_index_or_param": "رقم المحرك أو المعامل غير صالح.",
+  "motors.param_out_of_range_0_100": "يجب أن يكون المعامل بين 0 و 100.",
+  "motors.param_out_of_range_-100_100": "يجب أن يكون المعامل بين -100 و 100.",
+
+  "servo.invalid_index": "رقم السيرفو غير صالح.",
+  "servo.invalid_angle_0_180": "يجب أن تكون الزاوية بين 0 و 180 درجة.",
+  "servo.invalid_step_speed": "يجب أن تكون سرعة الخطوة بين 0 و 100.",
+  "servo.invalid_speed": "يجب أن تكون السرعة بين -100 و 100.",
+
+  "led_invalid_channel": "قناة LED غير صالحة.",
+  "led_invalid_effect": "وضع تأثير LED غير صالح.",
+  "led_invalid_repeat": "يجب أن يكون عدد التكرار بين 0 و 255.",
+
+  "buzzer_invalid_channel": "قناة الجرس غير صالحة.",
+
+  "music_invalid_rtttl": "تنسيق موسيقى RTTTL غير صالح."
+}

@@ -1,0 +1,28 @@
+{
+  "motors.invalid_index": "Invalid motor index.",
+  "motors.invalid_index_or_param": "Invalid motor index or parameter.",
+  "motors.param_out_of_range_0_100": "Parameter must be between 0 and 100.",
+  "motors.param_out_of_range_-100_100": "Parameter must be between -100 and 100.",
+
+  "servo.invalid_index": "Invalid servo index.",
+  "servo.invalid_angle_0_180": "Angle must be between 0 and 180 degrees.",
+  "servo.invalid_step_speed": "Step speed must be between 0 and 100.",
+  "servo.invalid_speed": "Speed must be between -100 and 100.",
+
+  "led_invalid_channel": "Invalid LED channel.",
+  "led_invalid_effect": "Invalid LED effect mode.",
+  "led_invalid_repeat": "Repeat count must be between 0 and 255.",
+
+  "buzzer_invalid_channel": "Invalid buzzer channel.",
+
+  "music_invalid_rtttl": "Invalid RTTTL format.",
+
+  "exec.import_error": "Import error during execution: {err}",
+  "exec.execution_error": "Execution error: {err}",
+  "exec.timeout": "Command execution timed out.",
+  "exec.execution_done": "Execution done.",
+  "exec.execution_stopped": "Execution stopped manually.",
+  "exec.execution_already_stopped": "Execution already been stopped.",
+  "exec.unsafe_command": "Unsafe command detected: {cmd}",
+  "exec.run_code_size": "RUN CODE SIZE: {size}"
+}

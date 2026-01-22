@@ -1,0 +1,28 @@
+{
+  "motors.invalid_index": "Geçersiz motor numarası.",
+  "motors.invalid_index_or_param": "Geçersiz motor numarası veya parametre.",
+  "motors.param_out_of_range_0_100": "Parametre 0 ile 100 arasında olmalıdır.",
+  "motors.param_out_of_range_-100_100": "Parametre -100 ile 100 arasında olmalıdır.",
+
+  "servo.invalid_index": "Geçersiz servo numarası.",
+  "servo.invalid_angle_0_180": "Açı 0 ile 180 derece arasında olmalıdır.",
+  "servo.invalid_step_speed": "Adım hızı 0 ile 100 arasında olmalıdır.",
+  "servo.invalid_speed": "Hız -100 ile 100 arasında olmalıdır.",
+
+  "led_invalid_channel": "Geçersiz LED kanalı.",
+  "led_invalid_effect": "Geçersiz LED efekt modu.",
+  "led_invalid_repeat": "Tekrar sayısı 0 ile 255 arasında olmalıdır.",
+
+  "buzzer_invalid_channel": "Geçersiz buzzer kanalı.",
+
+  "music_invalid_rtttl": "Geçersiz RTTTL müzik formatı.",
+
+  "exec.import_error": "Çalıştırma sırasında import hatası: {err}",
+  "exec.execution_error": "Çalıştırma hatası: {err}",
+  "exec.timeout": "Komut çalıştırma zaman aşımına uğradı.",
+  "exec.execution_done": "Çalıştırma tamamlandı.",
+  "exec.execution_stopped": "Çalıştırma manuel olarak durduruldu.",
+  "exec.execution_already_stopped": "Çalıştırma zaten durdurulmuş.",
+  "exec.unsafe_command": "Güvensiz komut tespit edildi: {cmd}",
+  "exec.run_code_size": "ÇALIŞTIRILAN KOD BOYUTU: {size}"
+}
