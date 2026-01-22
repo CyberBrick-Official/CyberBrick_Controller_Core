@@ -8,6 +8,10 @@
 from machine import Pin
 import easypwm
 
+from common.i18n import I18N
+
+_ = I18N()
+
 MOTOR1_CH1  = 0
 MOTOR1_CH2  = 1
 MOTOR2_CH1  = 2
@@ -20,6 +24,7 @@ MOTOR2_PIN2 = 7
 
 DUTY_MAX = 100.0
 
+
 class MotorsController:
     """
     A singleton class to control two DC motors using PWM signals.
@@ -28,6 +33,7 @@ class MotorsController:
     of two DC motors. It initializes the PWM pins for each motor channel and
     provides methods to set the motor speed, stop the motors, and configure
     the forward/reverse speed and offset parameters for each motor.
+
     Example:
         >>> motors = MotorsController()
         >>> # Set motor 1 to forward at half speed
@@ -100,12 +106,14 @@ class MotorsController:
             self.motor1_1_duty, self.motor1_2_duty = self._speed_handler(speed)
             easypwm.duty(MOTOR1_CH1, self.motor1_1_duty)
             easypwm.duty(MOTOR1_CH2, self.motor1_2_duty)
+
         elif motor_idx == 2:
             self.motor2_1_duty, self.motor2_2_duty = self._speed_handler(speed)
             easypwm.duty(MOTOR2_CH1, self.motor2_1_duty)
             easypwm.duty(MOTOR2_CH2, self.motor2_2_duty)
+
         else:
-            print("[motors]Invalid motor index. Must be between 1 and 2.")
+            print(_.t("motors.invalid_index"))
 
     def stop(self, motor_idx):
         """
@@ -113,8 +121,10 @@ class MotorsController:
 
         Args:
             motor_idx (int): Index of the motor (1 or 2).
+
         Raises:
             ValueError: If the motor index is not 1 or 2.
+
         Example:
             >>> motors.stop(1)  # Stop motor 1
             >>> motors.stop(2)  # Stop motor 2
@@ -126,9 +136,9 @@ class MotorsController:
         elif motor_idx == 2:
             easypwm.duty(MOTOR2_CH1, DUTY_MAX)
             easypwm.duty(MOTOR2_CH2, DUTY_MAX)
+
         else:
-            raise ValueError(
-                "[motors]Invalid motor index. Must be between 1 and 2.")
+            raise ValueError(_.t("motors.invalid_index"))
 
     def set_forward_rate(self, motor_idx, val):
         """
@@ -142,6 +152,7 @@ class MotorsController:
 
         Raises:
             ValueError: If the value is outside the acceptable range.
+
         Example:
             >>> # Set motor 1 to 80% forward speed
             >>> motors.set_forward_rate(1, 80)
@@ -150,9 +161,9 @@ class MotorsController:
             if 0 <= val <= 100:
                 self.motor_params[motor_idx]['forward_speed'] = val
             else:
-                print("[motors]Parameter value out of range (0-100).")
+                print(_.t("motors.param_out_of_range_0_100"))
         else:
-            print("[motors]Invalid motor index or parameter.")
+            print(_.t("motors.invalid_index_or_param"))
 
     def set_reverse_rate(self, motor_idx, val):
         """
@@ -164,6 +175,7 @@ class MotorsController:
 
         Raises:
             ValueError: If the value is outside the acceptable range.
+
         Example:
             >>> # Set motor 2 to 50% reverse speed
             >>> motors.set_reverse_rate(2, 50)
@@ -172,9 +184,9 @@ class MotorsController:
             if 0 <= val <= 100:
                 self.motor_params[motor_idx]['reverse_speed'] = val
             else:
-                print("[motors]Parameter value out of range (0-100).")
+                print(_.t("motors.param_out_of_range_0_100"))
         else:
-            print("[motors]Invalid motor index or parameter.")
+            print(_.t("motors.invalid_index_or_param"))
 
     def set_offset(self, motor_idx, val):
         """
@@ -186,6 +198,7 @@ class MotorsController:
 
         Raises:
             ValueError: If the value is outside the acceptable range.
+
         Example:
             >>> motors.set_offset(1, 20)  # Set motor 1 offset to 20
         """
@@ -193,11 +206,9 @@ class MotorsController:
             if -100 <= val <= 100:
                 self.motor_params[motor_idx]['offset'] = val
             else:
-                print("[motors]Parameter value out of range (-100-100).")
+                print(_.t("motors.param_out_of_range_-100_100"))
         else:
-            print("[motors]Invalid motor index or parameter.")
-
-    # Getter methods for motor parameters
+            print(_.t("motors.invalid_index_or_param"))
 
     def get_forward_rate(self, motor_idx):
         """
@@ -209,6 +220,7 @@ class MotorsController:
         Returns:
             int: The forward speed of the motor, in the range [0, 100].
             If the motor index is invalid, returns None.
+
         Example:
             >>> # Returns 100 (default forward speed for motor 1)
             >>> motors.get_forward_rate(1)
@@ -218,7 +230,7 @@ class MotorsController:
         if motor_idx in self.motor_params:
             return self.motor_params[motor_idx]['forward_speed']
         else:
-            print("[motors] Invalid motor index.")
+            print(_.t("motors.invalid_index"))
             return None
 
     def get_reverse_rate(self, motor_idx):
@@ -231,16 +243,17 @@ class MotorsController:
 
         Returns:
             int: The reverse speed of the motor, in the range [0, 100].
+
         Example:
             >>> # Returns 100 (default reverse speed for motor 1)
             >>> motors.get_reverse_rate(1)
             >>> # Returns 80 (if motor 2's reverse speed is set to 80)
             >>> motors.get_reverse_rate(2)
-    """
+        """
         if motor_idx in self.motor_params:
             return self.motor_params[motor_idx]['reverse_speed']
         else:
-            print("[motors] Invalid motor index.")
+            print(_.t("motors.invalid_index"))
             return None
 
     def get_offset(self, motor_idx):
@@ -252,6 +265,7 @@ class MotorsController:
 
         Returns:
             int: The offset value of the motor, in the range [-100, 100].
+
         Example:
             >>> # Returns 0 (default offset for motor 1)
             >>> motors.get_offset(1)
@@ -261,7 +275,7 @@ class MotorsController:
         if motor_idx in self.motor_params:
             return self.motor_params[motor_idx]['offset']
         else:
-            print("[motors] Invalid motor index.")
+            print(_.t("motors.invalid_index"))
             return None
 
     def _speed_handler(self, speed):
@@ -270,6 +284,7 @@ class MotorsController:
 
         Args:
             speed (int): Speed value to convert.
+
         Returns:
             tuple: A tuple containing the duty cycle values for \
                 the two motor channels.
