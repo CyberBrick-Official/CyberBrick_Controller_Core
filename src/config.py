@@ -1,56 +1,68 @@
 # -*- coding: utf-8 -*-
 #
-# Global configuration for CyberBrick Controller Core
+# Global configuration file
 #
 
 # =========================
-# Language / I18N
+# Language / i18n Settings
 # =========================
-DEFAULT_LANG = "en"          # "en" | "tr"
-I18N_LOCALES_PATH = "locales"
 
-# =========================
-# Executor
-# =========================
-EXECUTOR_DEFAULT_TIMEOUT = None   # seconds, None = no timeout
-EXECUTOR_LOOP_DELAY = 0.2         # asyncio sleep delay
-EXECUTOR_MONITOR_DELAY = 0.1
+# Default system language
+DEFAULT_LANG = "en"
 
-# =========================
-# Safety
-# =========================
-DANGEROUS_COMMANDS = [
-    "exit",
-    "quit",
-    "sys.exit",
-    "os.system",
-    "__import__",
-    "open",
-    "eval",
-    "exec",
-    "os.",
-    "subprocess",
-    "os.remove",
-    "os.rmdir"
-]
-
-# =========================
-# Default injected commands
-# =========================
-DEFAULT_COMMANDS = [
-    "import uasyncio as asyncio"
-]
-
-# =========================
-# Command remap rules
-# =========================
-REMAP_RULES = {
-    "bbl.motors": "control",
-    "MotorsController": "MotorsControllerExecMapper",
-    "ServosController": "ServosControllerExecMapper"
+# Supported languages (firmware + UI)
+SUPPORTED_LANGUAGES = {
+    "en": "English",
+    "tr": "Türkçe",
+    "ar": "العربية",
+    "pl": "Polski",
+    "cs": "Čeština",
 }
 
+# Locale files path (relative to src/common/i18n.py)
+LOCALES_PATH = "../locales"
+
+
 # =========================
-# Debug
+# System / Runtime Settings
 # =========================
+
+# Enable debug logs
 DEBUG = False
+
+# Garbage collection threshold (optional tuning)
+GC_COLLECT_INTERVAL = 2000  # ms
+
+
+# =========================
+# Executor Settings
+# =========================
+
+# Default command execution timeout (None = unlimited)
+EXECUTOR_TIMEOUT = None
+
+
+# =========================
+# Hardware Defaults
+# =========================
+
+# Default motor parameters
+MOTOR_DEFAULT_FORWARD = 100
+MOTOR_DEFAULT_REVERSE = 100
+MOTOR_DEFAULT_OFFSET = 0
+
+# Default LED behavior
+LED_DEFAULT_EFFECT = 0      # solid
+LED_DEFAULT_DURATION = 1000 # ms
+LED_DEFAULT_REPEAT = 1
+
+# Default buzzer / music
+BUZZER_DEFAULT_VOLUME = 50
+
+
+# =========================
+# Validation Helpers
+# =========================
+
+def is_language_supported(lang: str) -> bool:
+    return lang in SUPPORTED_LANGUAGES
