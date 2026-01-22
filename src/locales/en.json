@@ -1,0 +1,6 @@
+{
+  "motors.invalid_index": "[motors] Invalid motor index. Must be between 1 and 2.",
+  "motors.invalid_index_or_param": "[motors] Invalid motor index or parameter.",
+  "motors.param_out_of_range_0_100": "[motors] Parameter value out of range (0-100).",
+  "motors.param_out_of_range_-100_100": "[motors] Parameter value out of range (-100-100)."
+}
