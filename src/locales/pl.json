@@ -1,0 +1,19 @@
+{
+  "motors.invalid_index": "Nieprawidłowy numer silnika.",
+  "motors.invalid_index_or_param": "Nieprawidłowy numer silnika lub parametr.",
+  "motors.param_out_of_range_0_100": "Parametr musi mieścić się w zakresie od 0 do 100.",
+  "motors.param_out_of_range_-100_100": "Parametr musi mieścić się w zakresie od -100 do 100.",
+
+  "servo.invalid_index": "Nieprawidłowy numer serwa.",
+  "servo.invalid_angle_0_180": "Kąt musi mieścić się w zakresie od 0 do 180 stopni.",
+  "servo.invalid_step_speed": "Prędkość kroku musi mieścić się w zakresie od 0 do 100.",
+  "servo.invalid_speed": "Prędkość musi mieścić się w zakresie od -100 do 100.",
+
+  "led_invalid_channel": "Nieprawidłowy kanał LED.",
+  "led_invalid_effect": "Nieprawidłowy tryb efektu LED.",
+  "led_invalid_repeat": "Liczba powtórzeń musi mieścić się w zakresie od 0 do 255.",
+
+  "buzzer_invalid_channel": "Nieprawidłowy kanał buzzera.",
+
+  "music_invalid_rtttl": "Nieprawidłowy format RTTTL."
+}
