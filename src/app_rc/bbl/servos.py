@@ -7,6 +7,10 @@
 
 from machine import Pin, PWM
 
+from common.i18n import I18N
+
+_ = I18N()
+
 SERVO_CHANNEL1 = 3
 SERVO_CHANNEL2 = 2
 SERVO_CHANNEL3 = 1
@@ -50,15 +54,21 @@ class ServosController:
         self.servo2_pwm = PWM(Pin(SERVO_CHANNEL2), freq=50)
         self.servo3_pwm = PWM(Pin(SERVO_CHANNEL3), freq=50)
         self.servo4_pwm = PWM(Pin(SERVO_CHANNEL4), freq=50)
+
         self.servos_map = [
-            self.servo1_pwm, self.servo2_pwm, self.servo3_pwm, self.servo4_pwm
+            self.servo1_pwm,
+            self.servo2_pwm,
+            self.servo3_pwm,
+            self.servo4_pwm
         ]
+
         self.servos_info_map = [
             {"c_ang": 0, "s_ang": 0, "rh_ang": 0, "vel": 0, "step_en": False},
             {"c_ang": 0, "s_ang": 0, "rh_ang": 0, "vel": 0, "step_en": False},
             {"c_ang": 0, "s_ang": 0, "rh_ang": 0, "vel": 0, "step_en": False},
             {"c_ang": 0, "s_ang": 0, "rh_ang": 0, "vel": 0, "step_en": False},
         ]
+
         self.sensitity = 180
         self.tim_call_freq = 100
 
@@ -78,16 +88,16 @@ class ServosController:
             >>> servos.set_angle(1, 90)
         """
         if not 0 <= angle <= 180:
-            print("[servo]Invalid angle, Must be between 0 and 180.")
+            print(_.t("servo.invalid_angle_0_180"))
             return
 
-        duty = (int)(angle * 102 / 180 + 25)
+        duty = int(angle * 102 / 180 + 25)
         internal_idx = servo_idx - 1
 
         self.reset_info(servo_idx, angle)
 
         if not 0 <= internal_idx < len(self.servos_map):
-            print("[servo]Invalid servo index. Must be between 1 and 4.")
+            print(_.t("servo.invalid_index"))
             return
 
         self.servos_map[internal_idx].duty(duty)
@@ -110,7 +120,7 @@ class ServosController:
             >>> servos.set_angle_stepping(2, 180, 10)
         """
         if not 0 <= angle <= 180:
-            print("[servo]Invalid angle, Must be between 0 and 180.")
+            print(_.t("servo.invalid_angle_0_180"))
             return
 
         internal_idx = servo_idx - 1
@@ -127,7 +137,6 @@ class ServosController:
         cur_angle = self.servos_info_map[internal_idx]["c_ang"]
         self.servos_info_map[internal_idx]["rh_ang"] = cur_angle
         self.servos_info_map[internal_idx]["s_ang"] = angle
-
         self.servos_info_map[internal_idx]["step_en"] = True
 
     def set_angle_step(self, servo_idx, step_speed=100):
@@ -142,8 +151,8 @@ class ServosController:
             >>> # Set the stepping speed of servo 3 to 50%
             >>> servos.set_angle_step(3, 50)
         """
-        if not 0 <= step_speed <= 180:
-            print("[servo]Invalid step, Must be between 0 and 100.")
+        if not 0 <= step_speed <= 100:
+            print(_.t("servo.invalid_step_speed"))
             return
 
         internal_idx = servo_idx - 1
@@ -167,13 +176,13 @@ class ServosController:
             >>> servos.reset_info(1, 90)
         """
         if not 0 <= angle <= 180:
-            print("[servo]Invalid angle, Must be between 0 and 180.")
+            print(_.t("servo.invalid_angle_0_180"))
             return
 
         internal_idx = servo_idx - 1
 
         if not 0 <= internal_idx < len(self.servos_info_map):
-            print("[servo]Invalid servo index. Must be between 1 and 4.")
+            print(_.t("servo.invalid_index"))
             return
 
         self.tim_call_freq = call_freq
@@ -202,14 +211,14 @@ class ServosController:
             >>> servos.set_speed(2, 50)
         """
         if not -100 <= speed_percentage <= 100:
-            print("[servo]Invalid speed, Must be between -100 and 100.")
+            print(_.t("servo.invalid_speed"))
             return
 
         duty = round(speed_percentage * 51.2 / 100 + 76.8)
         internal_idx = servo_idx - 1
 
         if not 0 <= internal_idx < len(self.servos_map):
-            print("[servo]Invalid servo index. Must be between 1 and 4.")
+            print(_.t("servo.invalid_index"))
             return
 
         self.servos_map[internal_idx].duty(duty)
@@ -228,8 +237,10 @@ class ServosController:
             servo_idx (int): Index of the servo motor in the range [1, 4].
             duty (int): Duty cycle to set for the servo motor, ranging \
                 from 25 to 125.
+
         Returns:
             None
+
         Example:
             >>> # Set the duty cycle of servo 3 to 100
             >>> servos.set_duty(3, 100)
@@ -239,8 +250,7 @@ class ServosController:
         if 0 <= internal_idx < len(self.servos_map):
             self.servos_map[internal_idx].duty(duty)
         else:
-            raise ValueError(
-                "[servo]Invalid servo index. Must be between 1 and 4.")
+            raise ValueError(_.t("servo.invalid_index"))
 
     def timing_proc(self):
         """
@@ -279,14 +289,16 @@ class ServosController:
 
                 self.servos_info_map[servo_idx]["c_ang"] = angle
 
-                duty = (int)(angle * 102 / 180 + 25)
+                duty = int(angle * 102 / 180 + 25)
                 self.servos_map[servo_idx].duty(duty)
 
     def stop(self, servo_idx):
         """
         Stops a servo motor by setting its duty cycle to 0.
+
         Args:
             servo_idx (int): Index of the servo motor (1 to 4).
+
         Example:
             >>> # Stop servo 1
             >>> servos.stop(1)
@@ -296,5 +308,4 @@ class ServosController:
         if 0 <= internal_idx < len(self.servos_map):
             self.servos_map[internal_idx].duty(0)
         else:
-            raise ValueError(
-                "[servo]Invalid servo index. Must be between 1 and 4.")
+            raise ValueError(_.t("servo.invalid_index"))
