@@ -14,7 +14,7 @@ except Exception:
 
 
 class I18N:
-    def __init__(self, lang=None, locales_path="locales"):
+    def __init__(self, lang=None, locales_path="../locales"):
         self.lang = lang or DEFAULT_LANG
         self.locales_path = locales_path
         self._cache = {}
