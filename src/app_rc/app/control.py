@@ -494,7 +494,7 @@ class BBL_Controller:
         self.executor.register_remap_rules(code_exec_remap_rules)
         self.executor.register_final_cb(self._executor_final_cb)
 
-        self.d_ch_map = [None] * 2  # channel map
+        self.d_ch_map = [self.led1, self.led2]  # channel map
 
         self.setting = {}
         self.receiver_index = 0
@@ -556,8 +556,6 @@ class BBL_Controller:
                 self.d_ch_map[i] = leds_map[i]
                 self.d_ch_map[i].reinit()
                 self.d_ch_map[i].set_led_effect(0, 0, 0, 15, 0x000000)
-            else:
-                self.d_ch_map[i] = None
 
         for i in range(4):
             pwm_info = None
