@@ -167,7 +167,7 @@ pin configuration.
                 self.is_on = True
                 brightness = 255
         elif mod == 1:
-            new_state = elapsed < (duration >> 1)
+            new_state = elapsed < (duration // 2)
             if new_state == self.is_on:
                 update = False
             else:
