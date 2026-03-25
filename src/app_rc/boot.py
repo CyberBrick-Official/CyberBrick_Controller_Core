@@ -10,7 +10,7 @@ import bbl_product
 import sys
 
 _PRODUCT_NAME = "RC"
-_PRODUCT_VERSION = "01.00.01.00"
+_PRODUCT_VERSION = "01.00.01.01"
 
 bbl_product.set_app_name(_PRODUCT_NAME)
 bbl_product.set_app_version(_PRODUCT_VERSION)
