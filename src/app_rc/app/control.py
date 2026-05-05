@@ -518,13 +518,13 @@ class BBL_Controller:
         self.button_handler.press_down_callback_register(self._button_press_cb)
         self.button_handler.release_callback_register(self._button_up_cb)
 
-        self.key_short_effects_list = [CycleList()] * 4
-        self.key_long_effects_list = [CycleList()] * 4
-        self.key_down_effects_list = [CycleList()] * 4
-        self.key_up_effects_list = [CycleList()] * 4
-        self.adc_equal_effects_list = [CycleList()] * 6
-        self.adc_above_effects_list = [CycleList()] * 6
-        self.adc_below_effects_list = [CycleList()] * 6
+        self.key_short_effects_list = [CycleList() for _ in range(4)]
+        self.key_long_effects_list = [CycleList() for _ in range(4)]
+        self.key_down_effects_list = [CycleList() for _ in range(4)]
+        self.key_up_effects_list = [CycleList() for _ in range(4)]
+        self.adc_equal_effects_list = [CycleList() for _ in range(6)]
+        self.adc_above_effects_list = [CycleList() for _ in range(6)]
+        self.adc_below_effects_list = [CycleList() for _ in range(6)]
         # 6 ADC control lever channels: items:"equal", "above", "below"
         self.analog_cmp_mid = ["equal"] * 6
 
